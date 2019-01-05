@@ -19,17 +19,20 @@ struct SPACE_PACKET_PRIMARY_HEADER
     uint SEQUENCE_FLAGS : 2;
     uint PACKET_SEQUENCE_COUNT : 14;
     uint PACKET_DATA_LENGTH : 16;
-}
+};
 
 
 struct PACKET_DATA_FIELD
 {
 
-}
+};
 
 
 struct SPACE_PACKET
 {
     SPACE_PACKET_PRIMARY_HEADER PRIMARY_HEADER;
 
-}
+};
+
+void packet_request(SPACE_PACKET packet, uint APID);
+

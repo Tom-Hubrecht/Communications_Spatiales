@@ -16,6 +16,6 @@ int main()
 
     PrimaryHeader header;
     header.versionNumber = 0;
-    printf("%d\n", header.sequenceCoun);
+    printf("%d\n", header.sequenceCount);
     return 0;
 }

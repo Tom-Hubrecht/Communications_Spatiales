@@ -2,8 +2,10 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "BitArray/bit_array.h"
-#include "BitArray/bar.h"
+#include "bit_array.h"
+#include "bar.h"
+
+#include "packet.h"
 
 int getFileSize(FILE *f)
 {
@@ -44,7 +46,8 @@ bar * fileToBitArray(FILE *fp)
 {
     int fileSize = getFileSize(fp);
     unsigned char buffer[fileSize];
-    bar *bitFile = barcreate(8 * fileSize); // getFileSize returns the length in bytes
+    bar *bitFile = barcreate(8 * fileSize); // getFileSize returns the length
+                                            // in bytes
 
     int n;
     n = fread(buffer, fileSize, 1, fp);
@@ -59,15 +62,14 @@ bar * fileToBitArray(FILE *fp)
 }
 
 
-void chunkBitFile(bar *bitFile, int k, int n)
+/**void chunkBitFile(bar *bitFile, int k, int n)
 {
     int m = barlen(bitFile);
     int b = n - 2 * k; // Block length
     int 
-
 }
 
-
+**/
 
 bar * loadFile(char *fileName, int k, int n)
 {
