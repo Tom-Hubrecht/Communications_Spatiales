@@ -35,4 +35,3 @@ struct SPACE_PACKET
 };
 
 void packet_request(SPACE_PACKET packet, uint APID);
-
