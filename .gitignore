@@ -1,2 +1,2 @@
 # Ignore all input files
-files/
+files/*

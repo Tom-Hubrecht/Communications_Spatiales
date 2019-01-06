@@ -75,7 +75,7 @@ bar * loadFile(char *fileName, int k, int n)
 {
     char cwd[1024];
     getcwd(cwd, 1025);
-    strcat(cwd, "/Files/");
+    strcat(cwd, "../files/");
     strcat(cwd, fileName);
 
     FILE *fp;
