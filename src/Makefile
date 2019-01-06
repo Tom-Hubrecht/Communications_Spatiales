@@ -1,5 +1,5 @@
-LIB = "../lib/"
-BIT_ARR_PATH = $(LIB)"BitArray"
+LIB = ../lib/
+BIT_ARR_PATH = $(LIB)BitArray
 
 all: codage packet
 
