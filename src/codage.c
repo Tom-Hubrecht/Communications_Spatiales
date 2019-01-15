@@ -5,7 +5,7 @@
 #include "bit_array.h"
 #include "bar.h"
 
-#include "packet.h"
+#include "random.h"
 
 int getFileSize(FILE *f)
 {
@@ -132,12 +132,35 @@ int main(void) {
 
     barset(mes, 3);
 
-    loadFile("test.txt", 2, 3);
+    bar *generator = initGenerator();
+
+    bar *test1 = sequence(generator, 254);
+    print(test1);
+
+    bardestroy(test1);
+
+    bar *test = sequence(generator, 256);
+    print(test);
+
+    bar *res = combine(generator, mes);
+    print(res);
+
+/*    loadFile("test.txt", 2, 3);
 
     padding(mes, 5, 65536);
     bar *res = rsc(mes, 5, 31);
 
     bardestroy(mes);
+    bardestroy(res);
+*/
+
+    //print(generator);
+    //barshl(mes, 3, 1);
+    //print(mes);
+
+    freeGenerator(generator);
+    bardestroy(mes);
+    bardestroy(test);
     bardestroy(res);
 
     return 0;
