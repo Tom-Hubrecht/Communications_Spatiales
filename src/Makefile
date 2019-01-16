@@ -15,9 +15,7 @@ random: random.c
 	gcc -c random.c $(BIT_ARR_ARGS)
 
 libs:
-	for libdir in $(LIB); do \
-		$(MAKE) -C $$libdir; \
-	done
+	$(MAKE) -C $(LIB)
 
 clean:
 	rm *.o
