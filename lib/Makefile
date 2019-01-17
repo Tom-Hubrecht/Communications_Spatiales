@@ -1,6 +1,9 @@
-all:
-	@ for libdir in $(wildcard */); do \
-		$(MAKE) -C $$libdir; \
-	done
+all: bitarray wiringpi
 
-.PHONY: all
+bitarray:
+	@ cd BitArray && make
+
+wiringpi:
+	@ cd wiringPi && ./build
+
+.PHONY: all bitarray wiringpi
