@@ -5,8 +5,8 @@ BIT_ARR_ARGS = -I $(BIT_ARR_PATH) -L $(BIT_ARR_PATH) -lbitarr
 
 all: codage libs
 
-codage:	codage.c
-	gcc -o codage codage.c random.c $(BIT_ARR_ARGS)
+codage:	codage.c random.c turbocode.c
+	gcc -o codage codage.c random.c turbocode.c $(BIT_ARR_ARGS)
 
 packet: packet.c
 	gcc -c packet.c $(BIT_ARR_ARGS)

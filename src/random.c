@@ -6,9 +6,7 @@
 
 #include "random.h"
 
-typedef unsigned int uint;
-
-bar * initGenerator()
+generator * initGenerator(void)
 {
     bar *generator = barcreate(8);
     barfill(generator);
@@ -17,37 +15,37 @@ bar * initGenerator()
 }
 
 
-char yield(bar *generator)
+char yield(generator *gen)
 {
-    char res = barget(generator, 0);
+    char res = barget(gen, 0);
     char a = res;
-    a = a ^ barget(generator, 3);
-    a = a ^ barget(generator, 5);
-    a = a ^ barget(generator, 7);
-    barshr(generator, 1, a);
+    a = a ^ barget(gen, 3);
+    a = a ^ barget(gen, 5);
+    a = a ^ barget(gen, 7);
+    barshr(gen, 1, a);
 
     return res;
 }
 
 
-bar * sequence(bar *generator, uint n)
+bar * sequence(generator *gen, uint n)
 {
     bar *res = barcreate(n);
     
     for(uint i = 0; i < n; i++)
     {
-        barmake(res, i, yield(generator));
+        barmake(res, i, yield(gen));
     }
     
     return res;
 }
 
 
-bar * combine(bar *generator, bar *message)
+bar * combine(generator *gen, bar *message)
 {
-    resetGenerator(generator);
+    resetGenerator(gen);
     int n = barlen(message);
-    bar *seq = sequence(generator, n);
+    bar *seq = sequence(gen, n);
     bar *res = barcreate(n);
     barxor(res, seq, message);
 
@@ -55,13 +53,13 @@ bar * combine(bar *generator, bar *message)
 }
 
 
-void resetGenerator(bar *generator)
+void resetGenerator(generator *gen)
 {
-    barfill(generator);
+    barfill(gen);
 }
 
 
-void freeGenerator(bar *generator)
+void freeGenerator(generator *gen)
 {
-    bardestroy(generator);
+    bardestroy(gen);
 }
