@@ -116,3 +116,10 @@ bar * encode(buffer *buf)
 
     return encodedBuffer;
 }
+
+
+// Decode the rate 1/3 code
+bar * decode(buffer *buf)
+{
+    
+}
