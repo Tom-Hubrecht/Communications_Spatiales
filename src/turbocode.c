@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 
 #include "bit_array.h"
 #include "bar.h"
@@ -39,6 +40,16 @@ uint pi(uint s)
     uint c = (p[q] * j + 21 * m) % k2;
 
     return 2 * (t + c * (k1 / 2) + 1) - m;
+}
+
+
+// Compute the transition probability of the channel
+
+double pTransition(double x, uint d, double sigma)
+{
+    char mu = 2 * d - 1; // -1 if d = 0, 1 if d = 1
+    
+    return exp(- pow((x + mu) / sigma, 2) / 2) / (sigma * sqrt(2 * M_PI));
 }
 
 // We use the connection vector G1 = 11011 for the message
