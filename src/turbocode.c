@@ -12,7 +12,7 @@
 #include "turbocode.h"
 
 const uint p[] = {0, 31, 37, 43, 47, 53, 59, 61, 67};
-
+#define M_PI 3.14159265358979323846	/* pi */
 
 /* Tests functions */
 
@@ -25,7 +25,6 @@ void print2( bar *mes)
     }
 
     printf("\n");
-
 }
 
 /*-----------------*/
@@ -48,7 +47,7 @@ uint pi(uint s)
 double pTransition(double x, uint d, double sigma)
 {
     char mu = 2 * d - 1; // -1 if d = 0, 1 if d = 1
-    
+
     return exp(- pow((x + mu) / sigma, 2) / 2) / (sigma * sqrt(2 * M_PI));
 }
 
