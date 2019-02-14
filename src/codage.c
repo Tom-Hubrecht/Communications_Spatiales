@@ -1,6 +1,8 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <time.h>
 
 #include "bit_array.h"
 #include "bar.h"
@@ -26,7 +28,7 @@ void padding( bar *message, int k, int n)
     {
         barsize(message, n);
         barshl(message, k, 0);
-     } 
+     }
 }
 
 
@@ -67,7 +69,7 @@ bar * fileToBitArray(FILE *fp)
 {
     int m = barlen(bitFile);
     int b = n - 2 * k; // Block length
-    int 
+    int
 }
 
 **/
@@ -129,13 +131,32 @@ void print( bar *mes)
 
 int main(void) {
 
+    srand((unsigned int)time(NULL));
+    uint x;
+    double y;
+    double z;
+
     bar *mes = barcreate(8920);
 
     barset(mes, 3);
 
     bar *gen = initGenerator();
     bar *res = combine(gen, encode(mes));
-    print(res);
+
+    uint n = barlen(res) - 1;
+    double noisy[n + 1];
+
+    addNoise(res, 0.5, noisy);
+
+    double *logLikelihood = decode(noisy, 0.5);
+
+    for(uint i = 0; i < 100; i++)
+    {
+        x = barget(res, 3 * i);
+        y = noisy[3 * i];
+        z = logLikelihood[3*i];
+        printf("%d\t%f\t%f\n", x, y, z);
+    }
 
 /*    loadFile("test.txt", 2, 3);
 
@@ -144,7 +165,7 @@ int main(void) {
 
     bardestroy(mes);
     bardestroy(res);
-*/
+
 
     //print(generator);
     //barshl(mes, 3, 1);
@@ -152,6 +173,9 @@ int main(void) {
 
     bardestroy(mes);
     bardestroy(res);
+*/
+
+    free(logLikelihood);
 
     return 0;
 }

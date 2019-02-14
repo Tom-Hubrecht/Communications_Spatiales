@@ -3,16 +3,18 @@
 */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <math.h>
 
 #include "bit_array.h"
 #include "bar.h"
 
+#include "random.h"
 #include "turbocode.h"
 
+
 const uint p[] = {0, 31, 37, 43, 47, 53, 59, 61, 67};
-#define M_PI 3.14159265358979323846	/* pi */
 
 /* Tests functions */
 
@@ -41,15 +43,6 @@ uint pi(uint s)
     return 2 * (t + c * (k1 / 2) + 1) - m;
 }
 
-
-// Compute the transition probability of the channel
-
-double pTransition(double x, uint d, double sigma)
-{
-    char mu = 2 * d - 1; // -1 if d = 0, 1 if d = 1
-
-    return exp(- pow((x + mu) / sigma, 2) / 2) / (sigma * sqrt(2 * M_PI));
-}
 
 // We use the connection vector G1 = 11011 for the message
 // and G0 = 10011 for the component code
@@ -120,7 +113,7 @@ bar * encode(buffer *buf)
         b = yieldEncode(d, registerB);
         barmake(encodedBuffer, 3 * i + 2, b);
     }
-    
+
     bardestroy(registerA);
     bardestroy(registerB);
 
@@ -128,8 +121,130 @@ bar * encode(buffer *buf)
 }
 
 
-// Decode the rate 1/3 code
-bar * decode(buffer *buf)
+// Decode the rate 1/3 code with constraint length 4
+double * decode(double *buf, double s)
 {
-    
+
+    uint n = k1 * k2 + 4; // The original message length plus the padding bits
+                          // at the end
+    double alpha[2 * (n + 1) * 16];         // alpha(i, k, m)
+                                                // = alpha[i + 2*m + 32*k]
+    double beta[(n + 1) * 16];              // beta(k, m)
+                                                // = beta[m + 16*k]
+    double gamma[2 * (n + 1) * 16];         // gamma(i, R_k, m', m)
+                                                // = gamma[i + 2*m + 32*k]
+                                                // We only have one choice for
+                                                // m' knowing i and m
+    double lambda[2 * (n + 1) * 16];        // lambda(i, k, m)
+                                                // = lambda[i + 2*m + 32*k]
+    double *logLikelihood = malloc(sizeof(double) * (n + 1));
+    if (logLikelihood == NULL)
+    {
+        return NULL;
+    }
+
+
+    uint d; // The value of the k-th bit
+    uint b; // The value of the k-th encoded bit
+    uint m; // The previous state of the register
+    uint i;
+    double x;
+    double y;
+    double tmp[2]; // To store the sums
+
+    // Compute recursively alpha, gamma, beta and lambda for y1 and y2
+    // For rate 1/3, the received bits are x_0, y1_0, y2_0, x_1, ...
+
+    // Initialize alpha
+    alpha[0] = 1.0;
+    alpha[1] = 1.0;
+
+    // Initialize beta
+    beta[16*n] = 1.0;
+
+    for(uint k = 1; k <= n; k++) // k-th bit of the message
+    {
+        x = buf[3 * (k - 1)];
+        y = buf[3 * (k - 1) + 1];
+        tmp[0] = 0.0;
+        tmp[1] = 0.0;
+
+        for(uint S = 0; S < 16; S++) // Register state of the encoder
+        {
+            // S = m, m' = S/2 + e * 8 => d_k = i = (S % 2) ^ ((S & 8) / 8) ^ e
+            // b = i ^ (m' & 1) ^(m' & 4) ^ (m' & 8) and we have m' & 8 = e
+            // e = 0
+            m = S / 2;
+            d = (S % 2) ^ ((S & 8) / 8);
+            b = d ^ (m & 1) ^ (m & 4);
+            gamma[d + 2*S + 32*k] = pTransition(x, d, s) * pTransition(y, b, s) * 0.5;
+            i = 2*m + 32*(k-1);
+            alpha[d + 2*S + 32*k] = gamma[d + 2*S + 32*k] * (alpha[i] + alpha[1 + i]);
+            tmp[d] = tmp[d] + alpha[d + 2*S + 32*k];
+
+            // e = 1
+            m = 8 + S / 2;
+            d = 1 - d; // d = 1 - ((S % 2) ^ ((S & 8) / 8))
+            b = 1 - b; // b = 1 - (d ^ (m & 1) ^ (m & 4))
+            gamma[d + 2*S + 32*k] = pTransition(x, d, s) * pTransition(y, b, s) * 0.5;
+            i = 2*m + 32*(k-1);
+            alpha[d + 2*S + 32*k] = gamma[d + 2*S + 32*k] * (alpha[i] + alpha[1 + i]);
+            tmp[d] = tmp[d] + alpha[d + 2*S + 32*k];
+
+        }
+
+        for(uint S = 0; S < 16; S++)
+        {
+            // Normalize alpha
+            alpha[2*S + 32*k] = alpha[2*S + 32*k] / ((tmp[0] > 0)? tmp[0]: 1);
+            alpha[1 + 2*S + 32*k] = alpha[1 + 2*S + 32*k] / ((tmp[1] > 0)? tmp[1]: 1);
+            printf("%f\t%f\n", alpha[2*S + 32*k], alpha[1 + 2*S + 32*k]);
+        }
+        printf("\n");
+    }
+
+    for(uint k = (n - 1); k > 0; k--)
+    {
+        tmp[0] = 0.0;
+        tmp[1] = 0.0;
+
+        for(uint S = 0; S < 16; S++)
+        {
+            // e = 0
+            m = S / 2;
+            d = (S % 2) ^ ((S & 8) / 8);
+            beta[S + 16*k] = beta[S + 16*k] + beta[m + 16*(k + 1)] * gamma[d + 2*S + 32*(k + 1)];
+
+            // e = 1
+            m = 8 + S / 2;
+            d = 1 - d; // d = 1 - ((S % 2) ^ ((S & 8) / 8))
+            beta[S + 16*k] = beta[S + 16*k] + beta[m + 16*(k + 1)] * gamma[d + 2*S + 32*(k + 1)];
+
+            tmp[0] = tmp[0] + beta[S + 16*k];
+        }
+
+        for(uint S = 0; S < 16; S++)
+        {
+            // Normalize beta
+            beta[S + 16*k] = beta[S + 16*k] / ((tmp[0] > 0)? tmp[0]: 1);
+
+            // Compute lambda
+            lambda[2*S + 32*k] = alpha[2*S + 32*k] * beta[S + 16*k];
+            lambda[1 + 2*S + 32*k] = alpha[1 + 2*S + 32*k] * beta[S + 16*k];
+        }
+
+        tmp[0] = 0.0;
+        tmp[1] = 0.0;
+
+        for(uint S = 0; S < 16; S++)
+        {
+            tmp[0] = tmp[0] + lambda[2*S + 32*k];
+            tmp[1] = tmp[1] + lambda[1 + 2*S + 32*k];
+        }
+
+        logLikelihood[k] = log(tmp[1] / tmp[0]);
+
+    }
+
+    return logLikelihood;
 }

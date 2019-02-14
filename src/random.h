@@ -7,8 +7,15 @@
 #ifndef RANDOM_H
 #define RANDOM_H
 
+#define M_PI 3.14159265358979323846	/* pi */
+
 typedef unsigned int uint;
 typedef bar generator;
+
+
+double box_muller(double m, double s);
+void addNoise(bar *message, double s, double noisy[]);
+double pTransition(double x, uint d, double s);
 
 
 bar * initGenerator(void);

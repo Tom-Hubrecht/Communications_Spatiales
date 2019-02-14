@@ -2,11 +2,12 @@ LIB = ../lib/
 BIT_ARR_PATH = $(LIB)BitArray
 BIT_ARR_ARGS = -I $(BIT_ARR_PATH) -L $(BIT_ARR_PATH) -lbitarr
 
+RANDOM = random.c boxmuller.c
 
 all: codage libs
 
 codage:	codage.c random.c turbocode.c
-	gcc -o codage codage.c random.c turbocode.c $(BIT_ARR_ARGS)
+	gcc -o codage codage.c $(RANDOM) turbocode.c $(BIT_ARR_ARGS) -lm
 
 packet: packet.c
 	gcc -c packet.c $(BIT_ARR_ARGS)

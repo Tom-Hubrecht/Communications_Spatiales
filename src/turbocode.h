@@ -20,5 +20,7 @@ uint pi(uint s);
 char yieldEncode(char d, bar *memState);
 bar * initMemState(uint n);
 bar * encode(buffer *buf);
+double * decode(double *buf, double s);
+
 #endif
 
