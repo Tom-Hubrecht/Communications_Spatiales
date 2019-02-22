@@ -137,12 +137,15 @@ double * decode(double *buf, double s)
                                                 // m' knowing i and m
     double lambda[2 * (n + 1) * 16];        // lambda(i, k, m)
                                                 // = lambda[i + 2*m + 32*k]
+    double a[n + 1];                        // Used for normalization
+
     double *logLikelihood = malloc(sizeof(double) * (n + 1));
     if (logLikelihood == NULL)
     {
         return NULL;
     }
 
+    double tmp[2];
 
     uint d; // The value of the k-th bit
     uint b; // The value of the k-th encoded bit
@@ -150,7 +153,6 @@ double * decode(double *buf, double s)
     uint i;
     double x;
     double y;
-    double tmp[2]; // To store the sums
 
     // Compute recursively alpha, gamma, beta and lambda for y1 and y2
     // For rate 1/3, the received bits are x_0, y1_0, y2_0, x_1, ...
@@ -166,71 +168,64 @@ double * decode(double *buf, double s)
     {
         x = buf[3 * (k - 1)];
         y = buf[3 * (k - 1) + 1];
-        tmp[0] = 0.0;
-        tmp[1] = 0.0;
 
         for(uint S = 0; S < 16; S++) // Register state of the encoder
         {
-            // S = m, m' = S/2 + e * 8 => d_k = i = (S % 2) ^ ((S & 8) / 8) ^ e
-            // b = i ^ (m' & 1) ^(m' & 4) ^ (m' & 8) and we have m' & 8 = e
-            // e = 0
-            m = S / 2;
-            d = (S % 2) ^ ((S & 8) / 8);
-            b = d ^ (m & 1) ^ (m & 4);
-            gamma[d + 2*S + 32*k] = pTransition(x, d, s) * pTransition(y, b, s) * 0.5;
-            i = 2*m + 32*(k-1);
-            alpha[d + 2*S + 32*k] = gamma[d + 2*S + 32*k] * (alpha[i] + alpha[1 + i]);
-            tmp[d] = tmp[d] + alpha[d + 2*S + 32*k];
+            // Knowing d_k = i and S_k = S,
+                // m = S_{k-1} = S/2 + (S & 8) ^ 8*(i ^ (S & 1))
+            // b = i ^ (m & 1) ^ (m & 4)/4 ^ (m & 8)/8
 
-            // e = 1
-            m = 8 + S / 2;
-            d = 1 - d; // d = 1 - ((S % 2) ^ ((S & 8) / 8))
-            b = 1 - b; // b = 1 - (d ^ (m & 1) ^ (m & 4))
-            gamma[d + 2*S + 32*k] = pTransition(x, d, s) * pTransition(y, b, s) * 0.5;
+            // d_k = 0
+            m = S/2 + (S & 8) ^ 8*(S & 1);
+            d = 0;
+            b = (m & 1) ^ (m & 4)/4 ^ (m & 8)/8;
+            gamma[2*S + 32*k] = pTransition(x, d, s) * pTransition(y, b, s) * 0.5;
             i = 2*m + 32*(k-1);
-            alpha[d + 2*S + 32*k] = gamma[d + 2*S + 32*k] * (alpha[i] + alpha[1 + i]);
-            tmp[d] = tmp[d] + alpha[d + 2*S + 32*k];
+            alpha[2*S + 32*k] = gamma[2*S + 32*k] * (alpha[i] + alpha[1 + i]);
 
+            // d_k = 1
+            m = S/2 + (S & 8) ^ 8*((S & 1) ^ 1);
+            d = 1;
+            b = 1 - b;
+            gamma[1 + 2*S + 32*k] = pTransition(x, d, s) * pTransition(y, b, s) * 0.5;
+            i = 2*m + 32*(k-1);
+            alpha[1 + 2*S + 32*k] = gamma[1 + 2*S + 32*k] * (alpha[i] + alpha[1 + i]);
+            a[k] = a[k] + alpha[2*S + 32*k] + alpha[1 + 2*S + 32*k];
         }
 
         for(uint S = 0; S < 16; S++)
         {
             // Normalize alpha
-            alpha[2*S + 32*k] = alpha[2*S + 32*k] / ((tmp[0] > 0)? tmp[0]: 1);
-            alpha[1 + 2*S + 32*k] = alpha[1 + 2*S + 32*k] / ((tmp[1] > 0)? tmp[1]: 1);
-            printf("%f\t%f\n", alpha[2*S + 32*k], alpha[1 + 2*S + 32*k]);
+            alpha[2*S + 32*k] = alpha[2*S + 32*k] / a[k];
+            alpha[1 + 2*S + 32*k] = alpha[1 + 2*S + 32*k] / a[k];
         }
-        printf("\n");
     }
 
-    for(uint k = (n - 1); k > 0; k--)
+    for(int k = (n - 1); k >= 0; k--)
     {
-        tmp[0] = 0.0;
-        tmp[1] = 0.0;
-
         for(uint S = 0; S < 16; S++)
         {
-            // e = 0
-            m = S / 2;
-            d = (S % 2) ^ ((S & 8) / 8);
-            beta[S + 16*k] = beta[S + 16*k] + beta[m + 16*(k + 1)] * gamma[d + 2*S + 32*(k + 1)];
+            // Knowing d_k = i and S_{k-1} = S,
+                // m = S_k = (2*S & 15) + (S & 8)/8 ^ (i ^ (S & 4)/4)
 
-            // e = 1
-            m = 8 + S / 2;
-            d = 1 - d; // d = 1 - ((S % 2) ^ ((S & 8) / 8))
-            beta[S + 16*k] = beta[S + 16*k] + beta[m + 16*(k + 1)] * gamma[d + 2*S + 32*(k + 1)];
+            // d_k = 0
+            m = (2*S & 15) + ((S & 8)/8) ^ ((S & 4)/4);
+            beta[S + 16*k] = beta[m + 16*(k + 1)] * gamma[2*m + 32*(k + 1)];
 
-            tmp[0] = tmp[0] + beta[S + 16*k];
+            // d_k = 1
+            m = (2*S & 15) + ((S & 8)/8) ^ (1 - (S & 4)/4);
+            i = 2*m + 32*(k + 1);
+            beta[S + 16*k] = beta[S + 16*k] + beta[m + 16*(k + 1)] * gamma[1 + i];
         }
 
         for(uint S = 0; S < 16; S++)
         {
             // Normalize beta
-            beta[S + 16*k] = beta[S + 16*k] / ((tmp[0] > 0)? tmp[0]: 1);
+            beta[S + 16*k] = beta[S + 16*k] / a[k + 1];
 
             // Compute lambda
-            lambda[2*S + 32*k] = alpha[2*S + 32*k] * beta[S + 16*k];
-            lambda[1 + 2*S + 32*k] = alpha[1 + 2*S + 32*k] * beta[S + 16*k];
+            lambda[2*S + 32*k] = alpha[2*S + 32*(k + 1)] * beta[S + 16*k];
+            lambda[1 + 2*S + 32*k] = alpha[1 + 2*S + 32*(k + 1)] * beta[S + 16*k];
         }
 
         tmp[0] = 0.0;

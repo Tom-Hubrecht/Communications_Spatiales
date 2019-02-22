@@ -138,10 +138,12 @@ int main(void) {
 
     bar *mes = barcreate(8920);
 
-    barset(mes, 3);
+    //barset(mes, 3);
+    bit_array_set_all(mes);
 
     bar *gen = initGenerator();
-    bar *res = combine(gen, encode(mes));
+    //bar *res = combine(gen, encode(mes));
+    bar *res = encode(mes);
 
     uint n = barlen(res) - 1;
     double noisy[n + 1];
@@ -150,7 +152,7 @@ int main(void) {
 
     double *logLikelihood = decode(noisy, 0.5);
 
-    for(uint i = 0; i < 100; i++)
+    for(uint i = 0; i < 20; i++)
     {
         x = barget(res, 3 * i);
         y = noisy[3 * i];
