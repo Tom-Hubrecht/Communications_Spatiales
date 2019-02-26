@@ -9,7 +9,8 @@
 #include "random.h"
 
 
-// Add a White Gaussian Noise with mean 0 and standard deviation s to encoded data
+// Add a White Gaussian Noise with mean 0 and standard deviation s to the
+// encoded data
 void addNoise(bar *message, double s, double noisy[])
 {
     uint n = barlen(message);
@@ -26,7 +27,47 @@ double pTransition(double x, uint d, double s)
 {
     char mu = 2 * d - 1; // -1 if d = 0, 1 if d = 1
 
-    return exp(- pow((x - mu) / s, 2) / 2.0) / (s * sqrt(2.0 * M_PI));
+    if (isfinite(x))
+    {
+        return s == 0 ? (double) (x == mu) :
+                    exp(- pow((x - mu) / s, 2) / 2.0) / (s * sqrt(2.0 * M_PI));
+    }
+
+    return mu < 0 ? (double) x < 0 : (double) x > 0;
+}
+
+
+// P(x) with a normal distribution of mean m and variance s^2
+double normal(double x, double m, double s)
+{
+    return exp(- pow((x - m) / s, 2) / 2.0) / (s * sqrt(2.0 * M_PI));
+}
+
+
+// Compute the mean of an array
+double mean(double *Z, size_t n)
+{
+    double mu;
+    for(size_t i = 0; i < n; i++)
+    {
+        mu += Z[i];
+    }
+
+    return mu / (double) n;
+}
+
+
+// Compute the variance of an array
+double variance(double *Z, size_t n)
+{
+    double s;
+    double m = mean(Z, n);
+    for(size_t i = 0; i < n; i++)
+    {
+        s += pow((Z[i] - m), 2.0);
+    }
+
+    return s / (double) n;
 }
 
 

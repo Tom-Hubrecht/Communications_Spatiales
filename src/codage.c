@@ -10,6 +10,7 @@
 #include "random.h"
 #include "turbocode.h"
 
+
 int getFileSize(FILE *f)
 {
     fseek(f, 0, SEEK_END);
@@ -129,55 +130,40 @@ void print( bar *mes)
 
 }
 
-int main(void) {
+
+int main(void)
+{
 
     srand((unsigned int)time(NULL));
     uint x;
     double y;
     double z;
 
+    double s;
+    printf("Enter the value for sigma : ");
+    scanf("%lf", &s);
+
     bar *mes = barcreate(8920);
 
-    //barset(mes, 3);
-    bit_array_set_all(mes);
+    bit_array_random(mes, 0.5);
 
     bar *gen = initGenerator();
     //bar *res = combine(gen, encode(mes));
     bar *res = encode(mes);
 
-    uint n = barlen(res) - 1;
-    double noisy[n + 1];
+    uint n = barlen(res);
+    double noisy[n];
 
-    addNoise(res, 0.5, noisy);
+    addNoise(res, s, noisy);
 
-    double *logLikelihood = decode(noisy, 0.5);
+    bar *toto = decodeStream(noisy, s);
 
-    for(uint i = 0; i < 20; i++)
-    {
-        x = barget(res, 3 * i);
-        y = noisy[3 * i];
-        z = logLikelihood[3*i];
-        printf("%d\t%f\t%f\n", x, y, z);
-    }
+    printf("Number of error while decoding : %d\n", difference(mes, toto));
 
-/*    loadFile("test.txt", 2, 3);
 
-    padding(mes, 5, 65536);
-    bar *res = rsc(mes, 5, 31);
-
+    bardestroy(toto);
     bardestroy(mes);
     bardestroy(res);
-
-
-    //print(generator);
-    //barshl(mes, 3, 1);
-    //print(mes);
-
-    bardestroy(mes);
-    bardestroy(res);
-*/
-
-    free(logLikelihood);
 
     return 0;
 }
