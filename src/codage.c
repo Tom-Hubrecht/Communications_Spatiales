@@ -139,13 +139,13 @@ int main(void)
     double y;
     double z;
 
-    double s;
-    printf("Enter the value for sigma : ");
-    scanf("%lf", &s);
+    double s = 0.95;
+    printf("Noise sigma : %f\n", s);
+//    scanf("%lf", &s);
 
     bar *mes = barcreate(8920);
 
-    bit_array_random(mes, 0.5);
+    bit_array_random(mes, 1.0);
 
     bar *gen = initGenerator();
     //bar *res = combine(gen, encode(mes));
@@ -156,7 +156,7 @@ int main(void)
 
     addNoise(res, s, noisy);
 
-    bar *toto = decodeStream(noisy, s);
+    bar *toto = decodeStreamParallel(noisy, s, 100);
 
     printf("Number of error while decoding : %d\n", difference(mes, toto));
 

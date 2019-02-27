@@ -29,11 +29,30 @@ double pTransition(double x, uint d, double s)
 
     if (isfinite(x))
     {
-        return s == 0 ? (double) (x == mu) :
-                    exp(- pow((x - mu) / s, 2) / 2.0) / (s * sqrt(2.0 * M_PI));
+        if (s == 0)
+        {
+            return 1.0 * (x == mu);
+        }
+
+        return exp(- pow((x - mu) / s, 2) / 2.0) / (s * sqrt(2.0 * M_PI));
     }
 
-    return mu < 0 ? (double) x < 0 : (double) x > 0;
+    if (isnan(x))
+    {
+        return 0;
+    }
+
+    if (x == inf)
+    {
+        return mu > 0;
+    }
+
+    if (x == -inf)
+    {
+        return mu < 0;
+    }
+
+    return 0;
 }
 
 

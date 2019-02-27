@@ -23,12 +23,14 @@ char yieldEncode(char d, bar *memState);
 bar * initMemState(uint n);
 bar * encode(buffer *buf);
 double * decode(double *X, double *Y, double s);
-void decodePart(double *X, double *Y, double *llr, double s);
+int decodePart(double *X, double *Y, double *llr, double s);
 bar * recreate(double *mes, char f);
 bar * decodeStreamOnce(double *buf, double s);
+bar * decodeStreamParallel(double *buf, double s, size_t q);
 void split(double *buf, double *X, double *Y1, double *Y2, size_t n);
 int difference(bar *m1, bar *m2);
-
+void interleave(double *X, double *Y);
+void deinterleave(double *X, double *Y);
 
 #endif
 
