@@ -158,6 +158,8 @@ int main(void)
 
     bar *toto = decodeStreamParallel(noisy, s, 100);
 
+    print(toto);
+
     printf("Number of error while decoding : %d\n", difference(mes, toto));
 
 
