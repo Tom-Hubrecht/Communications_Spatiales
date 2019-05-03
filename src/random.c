@@ -7,6 +7,22 @@
 #include "bar.h"
 
 #include "random.h"
+#include "list.h"
+
+// Returns a permutation of 0..n-1 using the Fisher-Yates shuffle
+void permutation(i_list *list_i)
+{
+    int j;
+    for (size_t i = 0; i < list_i->n; i++)
+    {
+        j = rand() % (i + 1);
+        if (j != i)
+        {
+            list_i->list[i] = list_i->list[j];
+        }
+        list_i->list[j] = i;
+    }
+}
 
 
 // Add a White Gaussian Noise with mean 0 and standard deviation s to the

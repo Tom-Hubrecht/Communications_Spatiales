@@ -21,7 +21,7 @@ typedef bar buffer;
 uint pi(uint s);
 char yieldEncode(char d, bar *memState);
 bar * initMemState(uint n);
-bar * encode(buffer *buf);
+bar * encode_turbo(buffer *buf);
 double * decode(double *X, double *Y, double s);
 int decodePart(double *X, double *Y, double *llr, double s);
 bar * recreate(double *mes, char f);
@@ -33,4 +33,3 @@ void interleave(double *X, double *Y);
 void deinterleave(double *X, double *Y);
 
 #endif
-

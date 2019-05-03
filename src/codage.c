@@ -9,7 +9,9 @@
 
 #include "random.h"
 #include "turbocode.h"
+#include "list.h"
 
+#include "ldpc.h"
 
 int getFileSize(FILE *f)
 {
@@ -133,16 +135,37 @@ void print( bar *mes)
 
 int main(void)
 {
-
+    // Initialise the random generator
     srand((unsigned int)time(NULL));
     uint x;
     double y;
     double z;
 
-    double s = 0.95;
-    printf("Noise sigma : %f\n", s);
-//    scanf("%lf", &s);
+//    double s = 0.95;
+//    printf("Noise sigma : %f\n", s);
 
+    h_matrix *test = cldpc(20, 3, 4);
+    h_matrix *gen = cgm(test);
+    h_list *mes = chl(20);
+    set_all_h_list(mes, 1);
+    print_h_list(mes);
+    printf("\n");
+    print_h_matrix(gen);
+    printf("\n");
+    h_list *res = encode_ldpc(gen, mes);
+    print_h_list(res);
+    free_h_matrix(test);
+    free_h_matrix(gen);
+    free_h_list(mes);
+    free_h_list(res);
+//    h_matrix *testi = juxtapose(test, 1);
+//    print_h_matrix(test);
+//    print_h_matrix(testi);
+//    free_h_matrix(testi);
+//    free_h_matrix(test);
+
+//    scanf("%lf", &s);
+/*
     bar *mes = barcreate(8920);
 
     bit_array_random(mes, 1.0);
@@ -166,6 +189,6 @@ int main(void)
     bardestroy(toto);
     bardestroy(mes);
     bardestroy(res);
-
+*/
     return 0;
 }

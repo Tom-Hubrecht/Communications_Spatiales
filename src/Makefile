@@ -5,17 +5,19 @@ BMP_PATH = $(LIB)libbmp
 BMP_ARGS = -I $(BMP_PATH) -L $(BMP_PATH) -lbmp
 RPI_ARGS = -lwiringPi
 
+LIST = list.c
 RANDOM = random.c boxmuller.c
 TURBO = turbocode.c $(RANDOM)
+LDPC = ldpc.c
 TESTS = tests.c $(TURBO)
 RPI = rpi.c
 
-MAIN = $(TURBO) $(RPI)
+MAIN = $(TURBO) $(RPI) $(LIST) $(LDPC)
 MAIN_ARGS = $(BIT_ARR_ARGS) $(RPI_ARGS) $(BMP_ARGS) -lm
 
 all: codage libs
 
-codage:	codage.c random.c turbocode.c rpi.c
+codage:	codage.c random.c turbocode.c rpi.c list.c ldpc.c
 	gcc -o codage codage.c $(MAIN) $(MAIN_ARGS)
 
 packet: packet.c

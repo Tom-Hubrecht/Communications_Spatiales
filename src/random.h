@@ -5,6 +5,8 @@
 #include "bit_array.h"
 #include "bar.h"
 
+#include "list.h"
+
 #ifndef RANDOM_H
 #define RANDOM_H
 
@@ -15,6 +17,7 @@ typedef unsigned int uint;
 typedef bar generator;
 
 
+void permutation(i_list *list_i);
 double box_muller(double m, double s);
 void addNoise(bar *message, double s, double noisy[]);
 double pTransition(double x, uint d, double s);

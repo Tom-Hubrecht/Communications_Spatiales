@@ -1,2 +1,5 @@
 # Ignore Visual Studio Code files
 .vscode/
+
+# Don't include David MacKay's files
+ansi/

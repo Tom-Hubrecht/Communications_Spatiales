@@ -46,7 +46,7 @@ bar * initMemState(uint n)
 }
 
 
-bar * encode(buffer *buf)
+bar * encode_turbo(buffer *buf)
 {
     uint k = barlen(buf);
     // We use the rate 1/3 for convenience
