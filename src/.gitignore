@@ -7,3 +7,6 @@
 # Ignore executable files
 codage
 tests
+
+# Don't include David MacKay's files
+ansi/
