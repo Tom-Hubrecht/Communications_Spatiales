@@ -6,7 +6,7 @@
 
 
 // Create a ldpc matrix as described in Gallager's paper from 1963
-h_matrix * create_ldpc(size_t n, size_t j, size_t k)
+h_matrix * create_base(size_t n, size_t j, size_t k)
 {
     if (n % k)
     {
@@ -15,7 +15,7 @@ h_matrix * create_ldpc(size_t n, size_t j, size_t k)
 
     size_t m = (n * j) / k;
     h_matrix *res = chm(m, n);
-    i_list *perm = chi(n);
+    i_list *perm = cil(n, n);
     // Fill the first horizontal part of the matrix
     for (size_t i = 0; i < n; i++)
     {
@@ -35,18 +35,43 @@ h_matrix * create_ldpc(size_t n, size_t j, size_t k)
 }
 
 
-// Create the encoder matrix with the ldpc matrix
-h_matrix * create_generator_matrix(h_matrix *mat)
+// Create the encoder matrix with the base matrix
+h_matrix * create_generator_matrix_h(h_matrix *mat)
 {
-    return juxtapose(mat, 1);
+    return juxtapose_h(mat, 1);
+}
+
+
+// Create the encoder matrix with the base matrix
+a_matrix * create_generator_matrix_a(h_matrix *mat)
+{
+    return juxtapose_a(mat, 1);
+}
+
+
+// Create the decoder matrix with the base matrix
+h_matrix * create_decoder_matrix_h(h_matrix *mat)
+{
+    return juxtapose_h(mat, 0);
+}
+
+
+// Create the decoder matrix with the base matrix
+h_matrix * create_decoder_matrix_a(h_matrix *mat)
+{
+    return juxtapose_a(mat, 0);
 }
 
 
 // Encode a message mes with the generator matrix gen
-h_list * encode_ldpc(h_matrix *gen, h_list *mes)
+h_list * encode_ldpc_h(h_matrix *gen, h_list *mes)
 {
     return product_h(gen, mes);
 }
 
 
 // Decode the received message res with the decoding matrix mat
+h_list * decode_ldpc_a_basic(a_matrix *mat, h_list *mes)
+{
+
+}

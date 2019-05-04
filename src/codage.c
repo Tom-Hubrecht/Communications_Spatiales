@@ -145,26 +145,34 @@ int main(void)
 //    printf("Noise sigma : %f\n", s);
 
     h_matrix *test = cldpc(20, 3, 4);
-    h_matrix *gen = cgm(test);
-    h_list *mes = chl(20);
+    h_matrix *gen_h = cgm_h(test);
+    a_matrix *gen_a = convert_h(gen_h);
+    h_list *mes = chl(20, 20);
+
+
     set_all_h_list(mes, 1);
     print_h_list(mes);
     printf("\n");
-    print_h_matrix(gen);
+    print_h_matrix(gen_h);
     printf("\n");
-    h_list *res = encode_ldpc(gen, mes);
-    print_h_list(res);
-    free_h_matrix(test);
-    free_h_matrix(gen);
-    free_h_list(mes);
-    free_h_list(res);
-//    h_matrix *testi = juxtapose(test, 1);
-//    print_h_matrix(test);
-//    print_h_matrix(testi);
-//    free_h_matrix(testi);
-//    free_h_matrix(test);
+    print_a_matrix(gen_a);
+    printf("\n");
 
-//    scanf("%lf", &s);
+
+    h_list *res_h = encode_ldpc(gen_h, mes);
+    h_list *res_a = product_a(gen_a, mes);
+    print_h_list(res_h);
+    printf("\n");
+    print_h_list(res_a);
+
+
+    free_h_matrix(test);
+    free_h_matrix(gen_h);
+    free_a_matrix(gen_a);
+    free_h_list(mes);
+    free_h_list(res_h);
+    free_h_list(res_a);
+
 /*
     bar *mes = barcreate(8920);
 
