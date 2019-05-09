@@ -106,6 +106,15 @@ void set_all_h_list(h_list *list_h, char x)
 }
 
 
+void set_all_i_list(i_list *list_i, int x)
+{
+    for (size_t i = 0; i < list_i->n; i++)
+    {
+        list_i->list[i] = x;
+    }
+}
+
+
 int append_i(i_list *list_i, int x)
 {
     if (list_i->n == list_i->m_s)
@@ -124,7 +133,7 @@ int append_i(i_list *list_i, int x)
 // Shift the list l elements to the right
 int shift_i(i_list *list_i, int l)
 {
-    if (list_i->n + l >= list_i->m_s)
+    if (0 >= list_i->n + l >= list_i->m_s)
     {
         return 1;
     }
@@ -135,6 +144,43 @@ int shift_i(i_list *list_i, int l)
         list_i->list[i + list_i->n] = list_i->list[i];
     }
     return 0;
+}
+
+
+// Determines if the h_list is only 0
+char is_all_nil(h_list *list_h)
+{
+    char ok = 1;
+    for (size_t i = 0; i < list_h->n; i++)
+    {
+        if (list_h->list[i])
+        {
+            ok = 0;
+        }
+    }
+    return ok;
+}
+
+
+void max_i_list(i_list *list_i, i_list *res)
+{
+    int m = list_i->list[0];
+    res->n = 0;
+
+    for (size_t i = 0; i < list_i->n; i++)
+    {
+        if (list_i->list[i] == m)
+        {
+            append_i(res, i);
+        }
+
+        if (list_i->list[i] > m)
+        {
+            m = list_i->list[i];
+            res->n = 0;
+            append_i(res, i);
+        }
+    }
 }
 
 
@@ -179,6 +225,30 @@ h_list * product_a(a_matrix *mat, h_list *vect)
         }
     }
     return res;
+}
+
+
+int product_a_in_place(a_matrix *mat, h_list *vect, h_list *res)
+{
+    if (mat->m != vect->n || mat->n > res->m_s)
+    {
+        return 1;
+    }
+
+    res->n = mat->n;
+    set_all_h_list(res, 0);
+
+    for (size_t i = 0; i < mat->n; i++)
+    {
+        for (size_t k = 0; k < mat->list_n[i]->n; k++)
+        {
+            if (vect->list[mat->list_n[i]->list[k]])
+            {
+                res->list[i] ^= 1;
+            }
+        }
+    }
+    return 0;
 }
 
 
@@ -265,15 +335,15 @@ a_matrix * juxtapose_a(h_matrix *mat, char dir)
         // Copy tmp into res and add identity
         for (size_t i = 0; i < mat->n; i++)
         {
-            res->list_m[i + n] = cil(1, 1);
-            res->list_m[i + n]->list[0] = i;
+            res->list_m[i + m] = cil(1, 1);
+            res->list_m[i + m]->list[0] = i;
 
             res->list_n[i] = cil(tmp->list_n[i]->n, tmp->list_n[i]->n + 1);
-            for (size_t k = 0; k < res->list_m[i]->n; k++)
+            for (size_t k = 0; k < res->list_n[i]->n; k++)
             {
                 res->list_n[i]->list[k] = tmp->list_n[i]->list[k];
             }
-            append_i(res->list_n[i], n + i);
+            append_i(res->list_n[i], m + i);
         }
 
         for (size_t i = 0; i < mat->m; i++)

@@ -4,33 +4,33 @@
 #define LIST_H
 
 typedef struct h_list {
-  int n;      // Number of elements
-  int m_s;    // Maximum number of elements
+  size_t n;      // Number of elements
+  size_t m_s;    // Maximum number of elements
   char *list;
 } h_list;
 
 typedef struct s_list {
-  int n;      // Number of elements
-  int m_s;    // Maximum number of elements
+  size_t n;      // Number of elements
+  size_t m_s;    // Maximum number of elements
   double *list;
 } s_list;
 
 typedef struct i_list {
-  int n;      // Number of elements
-  int m_s;    // Maximum number of elements
+  size_t n;      // Number of elements
+  size_t m_s;    // Maximum number of elements
   int *list;
 } i_list;
 
 typedef struct h_matrix {
-  int n;  // n lignes
-  int m;  // m colonnes
+  size_t n;  // n lignes
+  size_t m;  // m colonnes
   char *mat;
 } h_matrix;
 
 // Use a sparse matrix structure similar to that of David MacKay's
 typedef struct a_matrix {
-  int n;            // n lignes
-  int m;            // m colonnes
+  size_t n;            // n lignes
+  size_t m;            // m colonnes
   i_list **list_m;    // Liste des coordonées verticales non nulles
   i_list **list_n;    // Liste des coordonées horizontales non nulles
 
@@ -50,11 +50,18 @@ void set_s_list(s_list *list_s, double x, size_t i);
 void set_h_matrix(h_matrix *mat_h, char x, size_t i, size_t j);
 
 void set_all_h_list(h_list *list_h, char x);
+void set_all_i_list(i_list *list_i, int x);
+
+char is_all_nil(h_list *list_h);
 
 int append_i(i_list *list_i, int x);
+int shift_i(i_list *list_i, int l);
+
+void max_i_list(i_list *list_i, i_list *res);
 
 h_list * product_h(h_matrix *mat, h_list *vect);
 h_list * product_a(a_matrix *mat, h_list *vect);
+int product_a_in_place(a_matrix *mat, h_list *vect, h_list *res);
 h_matrix * juxtapose_h(h_matrix *mat, char dir);
 a_matrix * juxtapose_a(h_matrix *mat, char dir);
 

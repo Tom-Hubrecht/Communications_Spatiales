@@ -57,7 +57,7 @@ h_matrix * create_decoder_matrix_h(h_matrix *mat)
 
 
 // Create the decoder matrix with the base matrix
-h_matrix * create_decoder_matrix_a(h_matrix *mat)
+a_matrix * create_decoder_matrix_a(h_matrix *mat)
 {
     return juxtapose_a(mat, 0);
 }
@@ -70,8 +70,64 @@ h_list * encode_ldpc_h(h_matrix *gen, h_list *mes)
 }
 
 
-// Decode the received message res with the decoding matrix mat
-h_list * decode_ldpc_a_basic(a_matrix *mat, h_list *mes)
+// Encode a message mes with the generator matrix gen
+h_list * encode_ldpc_a(a_matrix *gen, h_list *mes)
 {
+    return product_a(gen, mes);
+}
 
+
+// Decode the received message res with the decoding matrix mat
+// Returns 0 if the decoding is succesful or the number of iterations if not
+int decode_ldpc_a_basic(a_matrix *mat, h_list *mes, size_t nb_max)
+{
+    h_list *verif = product_a(mat, mes);
+    i_list *count = cil(mes->n, mes->n);
+    i_list *max_errors = cil(mes->n, mes->n);
+    size_t iter = 0;
+
+    print_h_list(verif);
+
+    char correct = is_all_nil(verif);
+
+
+    while (!correct && (iter < nb_max))
+    {
+        // Count the number of errors for each bit
+        for (size_t i = 0; i < verif->n; i++)
+        {
+            if (verif->list[i])
+            {
+                for (size_t j = 0; j < mat->list_n[i]->n; j++)
+                {
+                    count->list[mat->list_n[i]->list[j]] ++;
+                }
+            }
+        }
+
+        // Flip the bits with the most errors
+        max_i_list(count, max_errors);
+        print_i_list(count);
+        for (size_t i = 0; i < max_errors->n; i++)
+        {
+            mes->list[max_errors->list[i]] ^= 1;
+        }
+
+        print_h_list(mes);
+
+        iter ++;
+
+        product_a_in_place(mat, mes, verif);
+        print_h_list(verif);
+        printf("\n");
+        set_all_i_list(count, 0);
+        correct = is_all_nil(verif);
+    }
+
+    if (correct)
+    {
+        return 0;
+    }
+
+    return iter;
 }
