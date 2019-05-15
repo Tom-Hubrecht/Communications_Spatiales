@@ -1,27 +1,31 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
 #include <math.h>
 
+#include "../lib/BitArray/bit_array.h"
+#include "../lib/BitArray/bar.h"
 #include "random.h"
 #include "turbocode.h"
+#include "list.h"
 #include "tests.h"
 
 
-const uint p[] = {0, 31, 37, 43, 47, 53, 59, 61, 67};
+const size_t p[] = {0, 31, 37, 43, 47, 53, 59, 61, 67};
 
 
 // In the CCSDS Standard, bits are numbered from 1 but we really start at 0
 // so we need to replace pi(s) by pi(s + 1) - 1
 // Instead, we return pi(s) - 1 and call pi(k + 1)
-uint pi(uint s)
+size_t pi(size_t s)
 {
-    uint m = s % 2;
-    uint i = s / (2 * k2);
-    uint j = (s / 2) - i * k2;
-    uint t = (19 * i + 1) % (k1 / 2);
-    uint q = (t % 8) + 1;
-    uint c = (p[q] * j + 21 * m) % k2;
+    size_t m = s % 2;
+    size_t i = s / (2 * k2);
+    size_t j = (s / 2) - i * k2;
+    size_t t = (19 * i + 1) % (k1 / 2);
+    size_t q = (t % 8) + 1;
+    size_t c = (p[q] * j + 21 * m) % k2;
 
     return 2 * (t + c * (k1 / 2) + 1) - m - 1;
 }
@@ -40,17 +44,16 @@ char yieldEncode(char d, bar *m)
 }
 
 
-bar * initMemState(uint n)
+bar * initMemState(size_t n)
 {
     return barcreate(n);
 }
 
 
-bar * encode_turbo(buffer *buf)
+h_list * encode_turbo(h_list *buf)
 {
-    uint k = barlen(buf);
     // We use the rate 1/3 for convenience
-    bar *encodedBuffer = barcreate(3 * (k + 4));
+    h_list *buf_e = chl(3 * (buf->n + 4), 3 * (buf->n + 4));
 
     // Create the shift-registers
     bar *registerA = initMemState(4);
@@ -61,63 +64,67 @@ bar * encode_turbo(buffer *buf)
     char d;
 
     // Encode the buffer
-    for(uint i = 0; i < k; i++)
+    for(size_t i = 0; i < buf->n; i++)
     {
-        d = barget(buf, i);
-        barmake(encodedBuffer, 3 * i, d);
+        d = buf->list[i];
+        buf_e->list[3 * i] = d;
 
         a = yieldEncode(d, registerA);
-        barmake(encodedBuffer, 3 * i + 1, a);
+        buf_e->list[3 * i + 1] = a;
 
-        d = barget(buf, pi(i));
+        d = buf->list[pi(i)];
         b = yieldEncode(d, registerB);
-        barmake(encodedBuffer, 3 * i + 2, b);
+        buf_e->list[3 * i + 2] = b;
     }
 
     // Clean the registers
-    for(uint i = k; i < (k + 4); i++)
+    for(size_t i = buf->n; i < (buf->n + 4); i++)
     {
         d = barget(registerA, 3) ^ barget(registerA, 2);
-        barmake(encodedBuffer, 3 * i, d);
+        buf_e->list[3 * i] = d;
 
         a = yieldEncode(d, registerA);
-        barmake(encodedBuffer, 3 * i + 1, a);
+        buf_e->list[3 * i + 1] = a;
 
         d = barget(registerB, 3) ^ barget(registerB, 2);
         b = yieldEncode(d, registerB);
-        barmake(encodedBuffer, 3 * i + 2, b);
+        buf_e->list[3 * i + 2] = b;
     }
 
     bardestroy(registerA);
     bardestroy(registerB);
 
-    return encodedBuffer;
+    return buf_e;
 }
 
 
 // Computes the llr given the arrays X and Y
-int decodePart(double *X, double *Y, double *llr, double s)
+int decode_part(s_list *X, s_list *Y, s_list *llr, double s)
 {
     // Same as in decodeStream
-    size_t t = sizeof(double);
-    size_t n = k1 * k2 + 4; // The original message length plus the
+    if (X->n != Y->n || X->n != llr->n)
+    {
+        return 1;
+    }
+
+    size_t n = X->n; // The original message length plus the
                             // padding bits at the end
 
-    double *alpha = calloc(2 * (n + 1) * 16, t);   // alpha(i, k, m)
-                                                // = alpha[i + 2*m + 32*k]
+    s_list *alpha = csl(32*(n + 1), 32*(n + 1));    // alpha(i, k, m)
+                                                    // = alpha[i + 2*m + 32*k]
 
-    double *beta = calloc((n + 1) * 16, t);        // beta(k, m)
-                                                // = beta[m + 16*k]
+    s_list *beta = csl(16*(n + 1), 16*(n + 1));     // beta(k, m)
+                                                    // = beta[m + 16*k]
 
-    double *gamma = calloc(2 * (n + 1) * 16, t);   // gamma(i, R_k, m', m)
-                                                // = gamma[i + 2*m + 32*k]
+    s_list *gamma = csl(32*(n + 1), 32*(n + 1));    // gamma(i, R_k, m', m)
+                                                    // = gamma[i + 2*m + 32*k]
                                                 // We only have one choice for
                                                 // m' knowing i and m
 
-    double *lambda = calloc(2 * (n + 1) * 16, t);  // lambda(i, k, m)
-                                                // = lambda[i + 2*m + 32*k]
+    s_list *lambda = csl(32*(n + 1), 32*(n + 1));   // lambda(i, k, m)
+                                                    // = lambda[i + 2*m + 32*k]
 
-    double *a = calloc((n + 1), t);                // Used for normalization
+    s_list *a = csl(n + 1, n + 1);                // Used for normalization
 
     if (alpha == NULL || beta == NULL || gamma == NULL || lambda == NULL ||
         a == NULL)
@@ -127,10 +134,10 @@ int decodePart(double *X, double *Y, double *llr, double s)
 
     double tmp[2];
 
-    uint d; // The value of the k-th bit
-    uint b; // The value of the k-th encoded bit
-    uint m; // The previous state of the register
-    uint i;
+    size_t d; // The value of the k-th bit
+    size_t b; // The value of the k-th encoded bit
+    size_t m; // The previous state of the register
+    size_t i;
     double x;
     double y;
 
@@ -138,22 +145,22 @@ int decodePart(double *X, double *Y, double *llr, double s)
     // For rate 1/3, the received bits are x_0, y1_0, y2_0, x_1, ...
 
     // Initialize alpha
-    alpha[0] = 1.0;
-    alpha[1] = 1.0;
+    alpha->list[0] = 1.0;
+    alpha->list[1] = 1.0;
 
     // Initialize the norm of alpha
-    a[0] = 1.0;
-    a[n] = 1.0;
+    a->list[0] = 1.0;
+    a->list[n] = 1.0;
 
     // Initialize beta
-    beta[16*n] = 1.0;
+    beta->list[16*n] = 1.0;
 
-    for(uint k = 1; k <= n; k++) // k-th bit of the message
+    for(size_t k = 1; k <= n; k++) // k-th bit of the message
     {
-        x = X[k - 1];
-        y = Y[k - 1];
+        x = X->list[k - 1];
+        y = Y->list[k - 1];
 
-        for(uint S = 0; S < 16; S++) // Register state of the encoder
+        for(size_t S = 0; S < 16; S++) // Register state of the encoder
         {
             // Knowing d_k = i and S_k = S,
                 // m = S_{k-1} = S/2 + (S & 8) ^ 8*(i ^ (S & 1))
@@ -163,341 +170,214 @@ int decodePart(double *X, double *Y, double *llr, double s)
             d = 0;
             m = S/2 + (S & 8) ^ 8*((S & 1) ^ d);
             b = d ^ (m & 1) ^ (m & 4)/4 ^ (m & 8)/8;
-            gamma[2*S + 32*k] = pTrans(x, d, s) * pTrans(y, b, s);
+            gamma->list[2*S + 32*k] = pTrans(x, d, s) * pTrans(y, b, s);
             i = 2*m + 32*(k-1);
-            alpha[2*S + 32*k] = gamma[2*S + 32*k] * (alpha[i] + alpha[1 + i]);
+            alpha->list[2*S + 32*k] = gamma->list[2*S + 32*k] *
+                                        (alpha->list[i] + alpha->list[1 + i]);
 
             // d_k = 1
             d = 1;
             m = S/2 + (S & 8) ^ 8*((S & 1) ^ d);
             b = d ^ (m & 1) ^ (m & 4)/4 ^ (m & 8)/8;
-            gamma[1 + 2*S + 32*k] = pTrans(x, d, s) * pTrans(y, b, s);
+            gamma->list[1 + 2*S + 32*k] = pTrans(x, d, s) * pTrans(y, b, s);
             i = 2*m + 32*(k-1);
-            alpha[1 + 2*S + 32*k] = gamma[1 + 2*S + 32*k] *
-                                        (alpha[i] + alpha[1 + i]);
-            a[k] += alpha[2*S + 32*k] + alpha[1 + 2*S + 32*k];
+            alpha->list[1 + 2*S + 32*k] = gamma->list[1 + 2*S + 32*k] *
+                                        (alpha->list[i] + alpha->list[1 + i]);
+            a->list[k] += alpha->list[2*S + 32*k] + alpha->list[1 + 2*S + 32*k];
         }
 
-        if (isnan(a[k]))
+        if (isnan(a->list[k]))
         {
             return 2;
         }
 
-        for(uint S = 0; S < 16; S++)
+        for(size_t S = 0; S < 16; S++)
         {
             // Normalize alpha
-            alpha[2*S + 32*k] /=  a[k];
-            alpha[1 + 2*S + 32*k] /= a[k];
+            alpha->list[2*S + 32*k] /=  a->list[k];
+            alpha->list[1 + 2*S + 32*k] /= a->list[k];
         }
     }
 
     // lambda(i, n, 0) = alpha(i, n, 0)
     // lambda(i, n, m) = 0 if m != 0
-    lambda[32 * n] = alpha[32 * n];
-    lambda[1 + 32 * n] = alpha [1 + 32 * n];
+    lambda->list[32 * n] = alpha->list[32 * n];
+    lambda->list[1 + 32 * n] = alpha->list[1 + 32 * n];
 
     for(int k = (n - 1); k > 0; k--)    // Compute the probabilities beta
     {
-        for(uint S = 0; S < 16; S++)
+        for(size_t S = 0; S < 16; S++)
         {
             // Knowing d_k = i and S_{k-1} = S,
                 // m = S_k = (2*S & 15) + (S & 8)/8 ^ (i ^ (S & 4)/4)
 
             // d_k = 0
             m = (2*S & 15) + ((S & 8)/8) ^ ((S & 4)/4);
-            beta[S + 16*k] = beta[m + 16*(k + 1)] * gamma[2*m + 32*(k + 1)];
+            beta->list[S + 16*k] = beta->list[m + 16*(k + 1)] *
+                                                gamma->list[2*m + 32*(k + 1)];
 
             // d_k = 1
             m = (2*S & 15) + ((S & 8)/8) ^ (1 - (S & 4)/4);
             i = 2*m + 32*(k + 1);
-            beta[S + 16*k] += beta[i / 2] * gamma[1 + i];
+            beta->list[S + 16*k] += beta->list[i / 2] * gamma->list[1 + i];
         }
 
-        for(uint S = 0; S < 16; S++)
+        for(size_t S = 0; S < 16; S++)
         {
             // Normalize beta
-            beta[S + 16*k] /= a[k + 1];
+            beta->list[S + 16*k] /= a->list[k + 1];
 
             // Compute lambda
-            lambda[2*S + 32*k] = alpha[2*S + 32*k] * beta[S + 16*k];
-            lambda[1 + 2*S + 32*k] = alpha[1 + 2*S + 32*k] * beta[S + 16*k];
+            lambda->list[2*S + 32*k] = alpha->list[2*S + 32*k] *
+                                                        beta->list[S + 16*k];
+            lambda->list[1 + 2*S + 32*k] = alpha->list[1 + 2*S + 32*k] *
+                                                        beta->list[S + 16*k];
         }
 
         tmp[0] = 0.0;
         tmp[1] = 0.0;
 
-        for(uint S = 0; S < 16; S++)
+        for(size_t S = 0; S < 16; S++)
         {
-            tmp[0] += lambda[2*S + 32*k];
-            tmp[1] += lambda[1 + 2*S + 32*k];
+            tmp[0] += lambda->list[2*S + 32*k];
+            tmp[1] += lambda->list[1 + 2*S + 32*k];
         }
 
-        llr[k - 1] = log(tmp[1] / tmp[0]);
+        llr->list[k - 1] = log(tmp[1] / tmp[0]);
     }
 
     // Free the arrays
-    free(alpha);
-    free(beta);
-    free(gamma);
-    free(lambda);
-    free(a);
+    free_s_list(alpha);
+    free_s_list(beta);
+    free_s_list(gamma);
+    free_s_list(lambda);
+    free_s_list(a);
 
     return 0;
-}
-
-
-// Computes the llr given the arrays X and Y
-int decodePartPar(double *X, double *Y, double *Z, double *llr, double s)
-{
-    // Same as in decodeStream
-    size_t t = sizeof(double);
-    size_t n = k1 * k2 + 4; // The original message length plus the
-                            // padding bits at the end
-
-    double *alpha = calloc(2 * (n + 1) * 16, t);   // alpha(i, k, m)
-                                                // = alpha[i + 2*m + 32*k]
-
-    double *beta = calloc((n + 1) * 16, t);        // beta(k, m)
-                                                // = beta[m + 16*k]
-
-    double *gamma = calloc(2 * (n + 1) * 16, t);   // gamma(i, R_k, m', m)
-                                                // = gamma[i + 2*m + 32*k]
-                                                // We only have one choice for
-                                                // m' knowing i and m
-
-    double *lambda = calloc(2 * (n + 1) * 16, t);  // lambda(i, k, m)
-                                                // = lambda[i + 2*m + 32*k]
-
-    double *a = calloc((n + 1), t);                // Used for normalization
-
-    if (alpha == NULL || beta == NULL || gamma == NULL || lambda == NULL ||
-        a == NULL)
-    {
-        return 1;
-    }
-
-    double tmp[2];
-
-    uint d; // The value of the k-th bit
-    uint b; // The value of the k-th encoded bit
-    uint m; // The previous state of the register
-    uint i;
-    double x;
-    double y;
-
-    // Compute recursively alpha, gamma, beta and lambda for y1 and y2
-    // For rate 1/3, the received bits are x_0, y1_0, y2_0, x_1, ...
-
-    // Initialize alpha
-    alpha[0] = 1.0;
-    alpha[1] = 1.0;
-
-    // Initialize the norm of alpha
-    a[0] = 1.0;
-    a[n] = 1.0;
-
-    // Initialize beta
-    beta[16*n] = 1.0;
-
-    for(uint k = 1; k <= n; k++) // k-th bit of the message
-    {
-        x = X[k - 1];
-        y = Y[k - 1];
-
-        for(uint S = 0; S < 16; S++) // Register state of the encoder
-        {
-            // Knowing d_k = i and S_k = S,
-                // m = S_{k-1} = S/2 + (S & 8) ^ 8*(i ^ (S & 1))
-                // b = i ^ (m & 1) ^ (m & 4)/4 ^ (m & 8)/8
-
-            // d_k = 0
-            d = 0;
-            m = S/2 + (S & 8) ^ 8*((S & 1) ^ d);
-            b = d ^ (m & 1) ^ (m & 4)/4 ^ (m & 8)/8;
-            gamma[2*S + 32*k] = pTrans(x, d, s) * pTrans(y, b, s) * 0.5;
-            i = 2*m + 32*(k-1);
-            alpha[2*S + 32*k] = gamma[2*S + 32*k] * (alpha[i] + alpha[1 + i]);
-
-            // d_k = 1
-            d = 1;
-            m = S/2 + (S & 8) ^ 8*((S & 1) ^ d);
-            b = d ^ (m & 1) ^ (m & 4)/4 ^ (m & 8)/8;
-            gamma[1 + 2*S + 32*k] = pTrans(x, d, s) * pTrans(y, b, s) * 0.5;
-            i = 2*m + 32*(k-1);
-            alpha[1 + 2*S + 32*k] = gamma[1 + 2*S + 32*k] *
-                                        (alpha[i] + alpha[1 + i]);
-            a[k] += alpha[2*S + 32*k] + alpha[1 + 2*S + 32*k];
-        }
-
-        if (isnan(a[k]))
-        {
-            return 2;
-        }
-
-        for(uint S = 0; S < 16; S++)
-        {
-            // Normalize alpha
-            alpha[2*S + 32*k] /=  a[k];
-            alpha[1 + 2*S + 32*k] /= a[k];
-        }
-    }
-
-    // lambda(i, n, 0) = alpha(i, n, 0)
-    // lambda(i, n, m) = 0 if m != 0
-    lambda[32 * n] = alpha[32 * n];
-    lambda[1 + 32 * n] = alpha [1 + 32 * n];
-
-    for(int k = (n - 1); k > 0; k--)    // Compute the probabilities beta
-    {
-        for(uint S = 0; S < 16; S++)
-        {
-            // Knowing d_k = i and S_{k-1} = S,
-                // m = S_k = (2*S & 15) + (S & 8)/8 ^ (i ^ (S & 4)/4)
-
-            // d_k = 0
-            m = (2*S & 15) + ((S & 8)/8) ^ ((S & 4)/4);
-            beta[S + 16*k] = beta[m + 16*(k + 1)] * gamma[2*m + 32*(k + 1)];
-
-            // d_k = 1
-            m = (2*S & 15) + ((S & 8)/8) ^ (1 - (S & 4)/4);
-            i = 2*m + 32*(k + 1);
-            beta[S + 16*k] += beta[i / 2] * gamma[1 + i];
-        }
-
-        for(uint S = 0; S < 16; S++)
-        {
-            // Normalize beta
-            beta[S + 16*k] /= a[k + 1];
-
-            // Compute lambda
-            lambda[2*S + 32*k] = alpha[2*S + 32*k] * beta[S + 16*k];
-            lambda[1 + 2*S + 32*k] = alpha[1 + 2*S + 32*k] * beta[S + 16*k];
-        }
-
-        tmp[0] = 0.0;
-        tmp[1] = 0.0;
-
-        for(uint S = 0; S < 16; S++)
-        {
-            tmp[0] += lambda[2*S + 32*k];
-            tmp[1] += lambda[1 + 2*S + 32*k];
-        }
-
-        llr[k - 1] = log(tmp[1] / tmp[0]);
-    }
-
-    // Free the arrays
-    free(alpha);
-    free(beta);
-    free(gamma);
-    free(lambda);
-    free(a);
-
-    return 0;
-}
-
-// Computes the number of bits that differ from both arrays
-int difference(bar *m1, bar *m2)
-{
-    int n = barlen(m1);
-    if (n != barlen(m2))
-    {
-        return -1;
-    }
-
-    int d = 0;
-    for(int k = 0; k < n; k++)
-    {
-        d = d + (barget(m1, k) != barget(m2, k));
-    }
-
-    return d;
 }
 
 
 // If  f = 1 then we must deinterleave the array
-bar * recreate(double *mes, char f)
+h_list * recreate(s_list *mes, char f)
 {
+    char debug = 0;
+
     if (f != 0 && f != 1)
     {
+        if (debug)
+        {
+            printf("Incorrect value for f\n");
+        }
         return NULL;
     }
     size_t i;
 
-    bar *res = barcreate(k1 * k2);
-    for(size_t k = 0; k < k1 * k2; k++)
+    h_list *res = chl(mes->n, mes->n);
+    if (debug)
     {
-        i = f ? pi(k) : k;
-        barmake(res, i, (mes[k] > 0));
+        printf("Created recipient\n");
+        printf("Sizes : %d, %d\n", mes->n, res->n);
     }
 
+    for(size_t k = 0; k < mes->n; k++)
+    {
+        i = f ? pi(k) : k;
+        if (debug)
+        {
+            //printf("%d, %d\n", i, k);
+        }
+        res->list[i] = (mes->list[k] > 0);
+    }
+    if (debug)
+    {
+        printf("Copied data\n");
+    }
     return res;
 }
 
 
 // Divides the rate 1/3 stream into three arrays
-void split(double *buf, double *X, double *Y1, double *Y2, size_t n)
+int split_s(s_list *buf, s_list *X, s_list *Y1, s_list *Y2)
 {
-    for(size_t i = 0; i < n; i++)
+    if (buf->n % 3 || X->n != Y1->n || X->n != Y2->n || X->n != (buf->n / 3))
     {
-        X[i] = buf[3 * i];
-        Y1[i] = buf[3*i + 1];
-        Y2[i] = buf[3*i + 2];
+        return 1;
     }
+
+    for(size_t i = 0; i < X->n; i++)
+    {
+        X->list[i] = buf->list[3 * i];
+        Y1->list[i] = buf->list[3*i + 1];
+        Y2->list[i] = buf->list[3*i + 2];
+    }
+    return 0;
 }
 
 
 // Interleave the array Y and puts the result in X
-void interleave(double *X, double *Y)
+int interleave(s_list *X, s_list *Y)
 {
+    if (Y->n > X->m_s)
+    {
+        return 1;
+    }
+
+    X->n = Y->n;
     double t;
 
     for(size_t i = 0; i < k1 * k2; i++)
     {
         // If the result is inf or -inf we replace it to prevent errors
-        t = Y[pi(i)];
+        t = Y->list[pi(i)];
         if (isfinite(t))
         {
-            X[i] = t;
+            X->list[i] = t;
         }
         if (isinf(t))
         {
-            X[i] = t == inf ? 1.0 : -1.0;
+            X->list[i] = 100 * (t == inf ? 1.0 : -1.0);
         }
     }
+    return 0;
 }
 
 
 // Deinterleave the array Y and puts the result in X
-void deinterleave(double *X, double *Y)
+int deinterleave(s_list *X, s_list *Y)
 {
+    if (Y->n > X->m_s)
+    {
+        return 1;
+    }
+
     double t;
 
     for(size_t i = 0; i < k1 * k2; i++)
     {
         // If the result is inf or -inf we replace it to prevent errors
-        t = Y[i];
+        t = Y->list[i];
         if (isfinite(t))
         {
-            X[pi(i)] = t;
+            X->list[pi(i)] = t;
         }
         if (isinf(t))
         {
-            X[pi(i)] = t == inf ? 1.0 : -1.0;
+            X->list[pi(i)] = 100 * (t == inf ? 1.0 : -1.0);
         }
     }
+    return 0;
 }
 
 
-// Compute the max negative and min positive number of an array
-void minMax(double *mM, double *X, size_t n)
+// Compute the max negative and min positive number of a s_list
+void min_max(double mM[2], s_list *X)
 {
     double x;
     double m = -inf;
     double M = inf;
-    for(size_t i = 0; i < n; i++)
+    for(size_t i = 0; i < X->n; i++)
     {
-        x = X[i];
+        x = X->list[i];
         if (x <= 0 && x > m)
         {
             m = x;
@@ -514,14 +394,14 @@ void minMax(double *mM, double *X, size_t n)
 
 
 // Compute the min negative and max positive number of an array
-void maxMin(double *mM, double *X, size_t n)
+void max_min(double mM[2], s_list *X)
 {
     double x;
     double m = 0;
     double M = 0;
-    for(size_t i = 0; i < n; i++)
+    for(size_t i = 0; i < X->n; i++)
     {
-        x = X[i];
+        x = X->list[i];
         if (x < m)
         {
             m = x;
@@ -538,104 +418,382 @@ void maxMin(double *mM, double *X, size_t n)
 
 
 // Executes a single pass through both decoders on the stream
-bar * decodeStreamOnce(double *buf, double s)
+h_list * decode_turbo_basic(s_list *buf, double s)
 {
-    size_t d = sizeof(double);
-    size_t n = k1 * k2 + 4; // The original message length plus the
-                            // padding bits at the end
+    char debug = 0;
 
-    double *llr = calloc(n, d);    // The 0-th bit is not considered
+    char interleaved = 0;
+    size_t n = buf->n / 3;
 
-    double *X1 = calloc(n, d);
-    double *X2 = calloc(n, d);
-    double *Y1 = calloc(n, d);
-    double *Y2 = calloc(n, d);
+    s_list *llr = csl(n, n);    // The 0-th bit is not considered
+    s_list *X1 = csl(n, n);
+    s_list *X2 = csl(n, buf->n);
+    s_list *Y1 = csl(n, n);
+    s_list *Y2 = csl(n, n);
+
+    if (debug)
+    {
+        printf("Created the s_lists\n");
+        printf("Sizes :\n");
+        printf("\t- buf : %d\n", buf->n);
+        printf("\t- llr : %d\n", llr->n);
+        printf("\t- X1 : %d\n", X1->n);
+        printf("\t- X2 : %d\n", X2->n);
+        printf("\t- Y1 : %d\n", Y1->n);
+        printf("\t- Y2 : %d\n", Y2->n);
+    }
 
     double t;
     int k;
 
-    split(buf, X1, Y1, Y2, n);
+    split_s(buf, X1, Y1, Y2);
+    if (debug)
+    {
+        printf("Split incomming message\n");
+    }
 
-    decodePart(X1, Y1, llr, s);
+    k = decode_part(X1, Y1, llr, s);
+    if (debug)
+    {
+        printf("First pass on the decoder\n");
+        printf("\t- Error code : %d\n", k);
+    }
 
     // If the values in llr are sufficiently big, there is no need to do a
     // second pass, thus we compute the min of positives and max of negatives
     // to check this situation
     double mM[2];
     double Mm[2];
-    minMax(mM, llr, k1 * k2);
-    maxMin(Mm, llr, k1 * k2);
+    min_max(mM, llr);
+    max_min(Mm, llr);
 
-    if (Mm[0] < -26 && Mm[1] > 26)
+    if (Mm[0] > -26 || Mm[1] < 26)
     {
-        return recreate(llr, 0);
-    }
-
-    // We need to interleave the llr to match the pattern of Y2
-    interleave(X2, llr);
-
-    for(size_t i = 0; i < 4; i++)
-    {
-        printf("%f\t%f\n", llr[n - 5 + i], Y1[n - 4 + i]);
-    }
-
-    k = decodePart(X2, Y2, llr, s);
-
-    printf("%d\n", k);
-
-
-    // Free all the arrays
-    free(llr);
-
-    free(X1);
-    free(X2);
-    free(Y1);
-    free(Y2);
-
-    return recreate(llr, 1);
-}
-
-
-// Decode iteratively the stream
-bar * decodeStreamParallel(double *buf, double s, size_t q)
-{
-    size_t d = sizeof(double);
-    size_t n = k1 * k2 + 4; // The original message length plus the
-                            // padding bits at the end
-
-    double *llr = calloc(n, d);    // The 0-th bit is not considered
-
-    double *X1 = calloc(n, d);
-    double *X2 = calloc(n, d);
-    double *Y1 = calloc(n, d);
-    double *Y2 = calloc(n, d);
-    double *Z  = calloc(n, d);
-
-    split(buf, X1, Y1, Y2, n);
-
-    for(size_t i = 0; i < q; i++)
-    {
-        decodePart(X1, Y1, llr, s);
+        interleaved = 1;
 
         // We need to interleave the llr to match the pattern of Y2
         interleave(X2, llr);
+        if (debug)
+        {
+            printf("Interleaved the data\n");
+        }
 
-        decodePart(X2, Y2, llr, s);
-
-        deinterleave(X1, llr);
-
+        k = decode_part(X2, Y2, llr, s);
+        if (debug)
+        {
+            printf("Second pass on the decoder\n");
+            printf("\t- Error code : %d\n", k);
+        }
     }
 
 
-    bar *res = recreate(llr, 1);
+
+    h_list *res = recreate(llr, interleaved);
 
     // Free all the arrays
-    free(llr);
-
-    free(X1);
-    free(X2);
-    free(Y1);
-    free(Y2);
+    free_s_list(llr);
+    free_s_list(X1);
+    free_s_list(X2);
+    free_s_list(Y1);
+    free_s_list(Y2);
+    if (debug)
+    {
+        printf("Freed structures\n");
+    }
 
     return res;
+}
+
+
+// Executes at most i_max passes through both decoders on the stream
+h_list * decode_turbo_iter(s_list *buf, double s, size_t i_max)
+{
+    char debug = 1;
+
+    char done = 0;
+    char interleaved = 0;
+    size_t iter = 0;
+
+    double mM[2];
+    double Mm[2];
+
+    size_t n = buf->n / 3;
+
+    s_list *llr = csl(n, n);    // The 0-th bit is not considered
+    s_list *X1 = csl(n, n);
+    s_list *X2 = csl(n, buf->n);
+    s_list *Y1 = csl(n, n);
+    s_list *Y2 = csl(n, n);
+
+    if (debug)
+    {
+        printf("Created the s_lists\n");
+        printf("Sizes :\n");
+        printf("\t- buf : %d\n", buf->n);
+        printf("\t- llr : %d\n", llr->n);
+        printf("\t- X1 : %d\n", X1->n);
+        printf("\t- X2 : %d\n", X2->n);
+        printf("\t- Y1 : %d\n", Y1->n);
+        printf("\t- Y2 : %d\n", Y2->n);
+    }
+
+    double t;
+    int k;
+
+    split_s(buf, X1, Y1, Y2);
+    if (debug)
+    {
+        printf("Split incomming message\n");
+    }
+
+    while (!done && iter < i_max)
+    {
+        iter ++;
+
+        if (debug)
+        {
+            printf("Iteration %d / %d\n", iter, i_max);
+        }
+
+        interleaved = 0;
+
+        k = decode_part(X1, Y1, llr, s);
+        if (debug)
+        {
+            printf("\tFirst pass on the decoder\n");
+            printf("\t\t- Error code : %d\n", k);
+        }
+
+        // If the values in llr are sufficiently big, there is no need to do a
+        // second pass, thus we compute the min of positives and max of
+        // negatives to check for this situation
+        max_min(Mm, llr);
+
+        if (Mm[0] > -26 || Mm[1] < 26)
+        {
+            interleaved = 1;
+
+            // We need to interleave the llr to match the pattern of Y2
+            interleave(X2, llr);
+            if (debug)
+            {
+                printf("\tInterleaved the data\n");
+            }
+
+            k = decode_part(X2, Y2, llr, s);
+            if (debug)
+            {
+                printf("\tSecond pass on the decoder\n");
+                printf("\t\t- Error code : %d\n", k);
+            }
+
+            // Update X1 with the new values
+            deinterleave(X1, llr);
+        }
+
+        if (Mm[0] < -20 && Mm[1] > 20)
+        {
+            done = 1;
+            if (debug)
+            {
+                printf("Decoding complete\n");
+            }
+        }
+    }
+
+    h_list *res = recreate(llr, interleaved);
+
+    // Free all the arrays
+    free_s_list(llr);
+    free_s_list(X1);
+    free_s_list(X2);
+    free_s_list(Y1);
+    free_s_list(Y2);
+    if (debug)
+    {
+        printf("Freed structures\n");
+    }
+
+    return res;
+}
+
+
+int demo_turbo_basic(char *file_name, double s)
+{
+    char debug = 0;
+
+    char path[1024];        // The source file
+    char path_n[1024];      // The noisy file
+    char path_d[1024];      // The decoded file
+
+    getcwd(path, 1024);
+    strcat(path, "/../files/bytes/");
+    strcat(path, file_name);
+
+    strcpy(path_n, path);
+    strcpy(path_d, path);
+
+    strcat(path, ".bt");
+    strcat(path_n, "_turbo_n.bt");
+    strcat(path_d, "_turbo_d.bt");
+
+    FILE *fp = fopen(path, "r");
+    FILE *fn = fopen(path_n, "w");
+    FILE *fd = fopen(path_d, "w");
+
+    if (debug)
+    {
+        printf("Opened files\n");
+    }
+
+    hh_list *mes_d = read_bit_file_h(fp, 8920);
+    hh_list *mes_n = deep_copy(mes_d);
+
+    if (debug)
+    {
+        printf("Created hh_lists\n");
+    }
+
+    printf("Number of slices : %d\n", mes_d->n);
+
+    for (size_t i = 0; i < mes_d->n; i++)
+    {
+        printf("\nSlice number %d :\n", i);
+
+        h_list *res = encode_turbo(mes_d->list[i]);
+        printf("\t- Encoded\n");
+
+        s_list *noisy = add_noise(res, s);
+        printf("\t- Added gaussian noise\n");
+
+        h_list *noisy_h = decode_h_basic(noisy);
+        if (debug)
+        {
+            printf("\t- Performed basic decoding\n");
+        }
+
+        copy_h(noisy_h, mes_n->list[i], 8920, 3);
+        if (debug)
+        {
+            printf("\t- Copied basic decoding\n");
+        }
+
+        h_list *dec = decode_turbo_basic(noisy, s);
+        printf("\t- Decoded\n");
+
+        copy_h(dec, mes_d->list[i], 8920, 1);
+        if (debug)
+        {
+            printf("\t- Copied decoding\n");
+        }
+
+        free_h_list(dec);
+        free_h_list(noisy_h);
+        free_s_list(noisy);
+        free_h_list(res);
+    }
+
+    write_bit_file_h(fn, mes_n);
+    write_bit_file_h(fd, mes_d);
+
+    fclose(fp);
+    fclose(fn);
+    fclose(fd);
+
+    free_hh_list(mes_d);
+    free_hh_list(mes_n);
+
+    return 0;
+}
+
+
+int demo_turbo_iter(char *file_name, double s, size_t i_max)
+{
+    char debug = 1;
+
+    char path[1024];        // The source file
+    char path_n[1024];      // The noisy file
+    char path_d[1024];      // The decoded file
+
+    getcwd(path, 1024);
+    strcat(path, "/../files/bytes/");
+    strcat(path, file_name);
+
+    strcpy(path_n, path);
+    strcpy(path_d, path);
+
+    strcat(path, ".bt");
+    strcat(path_n, "_turbo_n.bt");
+    strcat(path_d, "_turbo_d.bt");
+
+    FILE *fp = fopen(path, "r");
+    FILE *fn = fopen(path_n, "w");
+    FILE *fd = fopen(path_d, "w");
+
+    if (debug)
+    {
+        printf("Opened files\n");
+    }
+
+    hh_list *mes_d = read_bit_file_h(fp, 8920);
+    hh_list *mes_n = deep_copy(mes_d);
+
+    if (debug)
+    {
+        printf("Created hh_lists\n");
+    }
+
+    printf("Number of slices : %d\n", mes_d->n);
+
+    for (size_t i = 0; i < mes_d->n; i++)
+    {
+        printf("\nSlice number %d :\n", i);
+
+        h_list *res = encode_turbo(mes_d->list[i]);
+        printf("\t- Encoded\n");
+
+        s_list *noisy = add_noise(res, s);
+        printf("\t- Added gaussian noise\n");
+
+        h_list *noisy_h = decode_h_basic(noisy);
+        if (debug)
+        {
+            printf("\t- Performed basic decoding\n");
+        }
+
+        copy_h(noisy_h, mes_n->list[i], 8920, 3);
+        if (debug)
+        {
+            printf("\t- Copied basic decoding\n");
+        }
+
+        h_list *dec = decode_turbo_iter(noisy, s, i_max);
+        printf("\t- Decoded\n");
+
+        dec->n = 8920;
+        printf("\t\tNumber of errors : %d\n", nb_errors(mes_d->list[i], dec));
+
+        copy_h(dec, mes_d->list[i], 8920, 1);
+        if (debug)
+        {
+            printf("\t- Copied decoding\n");
+        }
+
+        free_h_list(dec);
+        free_h_list(noisy_h);
+        free_s_list(noisy);
+        free_h_list(res);
+    }
+
+    write_bit_file_h(fn, mes_n);
+    write_bit_file_h(fd, mes_d);
+
+    fclose(fp);
+    fclose(fn);
+    fclose(fd);
+
+    free_hh_list(mes_d);
+    free_hh_list(mes_n);
+
+    return 0;
 }

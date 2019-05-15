@@ -27,11 +27,11 @@ void permutation(i_list *list_i)
 
 // Add a White Gaussian Noise with mean 0 and standard deviation s to the
 // encoded data
-void addNoise(bar *message, double s, double noisy[])
+void addNoise(bar *message, double s, double *noisy)
 {
-    uint n = barlen(message);
+    size_t n = barlen(message);
 
-    for(uint i = 0; i < n; i++)
+    for(size_t i = 0; i < n; i++)
     {
         noisy[i] = (2 * barget(message, i) - 1.0) + box_muller(0.0, s);
     }
@@ -39,15 +39,22 @@ void addNoise(bar *message, double s, double noisy[])
 
 
 // Compute the transition probability of the channel
-double pTransition(double x, uint d, double s)
+double pTransition(double x, size_t d, double s)
 {
     char mu = 2 * d - 1; // -1 if d = 0, 1 if d = 1
+    double res;
 
     if (isfinite(x))
     {
         if (s == 0)
         {
             return 1.0 * (x == mu);
+        }
+
+        if (fabs(x) / s > 26)   // If |x| is too big, the probability returns 0
+                                // which would be incorrect
+        {
+            return x * mu > 0;
         }
 
         return exp(- pow((x - mu) / s, 2) / 2.0) / (s * sqrt(2.0 * M_PI));
@@ -131,11 +138,11 @@ char yield(generator *gen)
 
 
 // Generate a sequence of n random values
-bar * sequence(generator *gen, uint n)
+bar * sequence(generator *gen, size_t n)
 {
     bar *res = barcreate(n);
 
-    for(uint i = 0; i < n; i++)
+    for(size_t i = 0; i < n; i++)
     {
         barmake(res, i, yield(gen));
     }

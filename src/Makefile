@@ -11,13 +11,14 @@ TURBO = turbocode.c $(RANDOM)
 LDPC = ldpc.c
 TESTS = tests.c $(TURBO)
 RPI = rpi.c
+BASIC = basic.c
 
-MAIN = $(TURBO) $(RPI) $(LIST) $(LDPC)
+MAIN = $(TURBO) $(RPI) $(LIST) $(LDPC) $(BASIC)
 MAIN_ARGS = $(BIT_ARR_ARGS) $(RPI_ARGS) $(BMP_ARGS) -lm
 
 all: codage libs
 
-codage:	codage.c random.c turbocode.c rpi.c list.c ldpc.c
+codage:	codage.c random.c turbocode.c rpi.c list.c ldpc.c basic.c
 	gcc -o codage codage.c $(MAIN) $(MAIN_ARGS)
 
 packet: packet.c

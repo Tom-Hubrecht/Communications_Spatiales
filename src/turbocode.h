@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "bit_array.h"
-#include "bar.h"
-
-typedef unsigned int uint;
+#include "../lib/BitArray/bit_array.h"
+#include "../lib/BitArray/bar.h"
+#include "basic.h"
+#include "list.h"
 
 #ifndef TURBOCODE_H
 #define TURBOCODE_H
@@ -14,22 +14,26 @@ typedef unsigned int uint;
 
 #define pTrans pTransition
 
-extern const uint p[];
+extern const size_t p[];
 
 typedef bar buffer;
 
-uint pi(uint s);
+size_t pi(size_t s);
 char yieldEncode(char d, bar *memState);
-bar * initMemState(uint n);
-bar * encode_turbo(buffer *buf);
-double * decode(double *X, double *Y, double s);
-int decodePart(double *X, double *Y, double *llr, double s);
-bar * recreate(double *mes, char f);
-bar * decodeStreamOnce(double *buf, double s);
-bar * decodeStreamParallel(double *buf, double s, size_t q);
-void split(double *buf, double *X, double *Y1, double *Y2, size_t n);
-int difference(bar *m1, bar *m2);
-void interleave(double *X, double *Y);
-void deinterleave(double *X, double *Y);
+bar * initMemState(size_t n);
+h_list * encode_turbo(h_list *buf);
+int decode_part(s_list *X, s_list *Y, s_list *llr, double s);
+
+h_list * recreate(s_list *mes, char f);
+int split_s(s_list *buf, s_list *X, s_list *Y1, s_list *Y2);
+int interleave(s_list *X, s_list *Y);
+int deinterleave(s_list *X, s_list *Y);
+void min_max(double mM[2], s_list *X);
+void max_min(double mM[2], s_list *X);
+h_list * decode_turbo_basic(s_list *buf, double s);
+h_list * decode_turbo_iter(s_list *buf, double s, size_t i_max);
+int demo_turbo_basic(char *file_name, double s);
+int demo_turbo_iter(char *file_name, double s, size_t i_max);
+
 
 #endif

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "list.h"
+#include "basic.h"
 
 
 h_list * create_h_list(size_t n, size_t m_s)
@@ -60,6 +61,16 @@ a_matrix * create_a_matrix(size_t n, size_t m)
 }
 
 
+hh_list * create_hh_list(size_t n, size_t m_e)
+{
+    hh_list *res = malloc(sizeof(hh_list));
+    res->n = n;
+    res->m_e = m_e;
+    res->list = malloc(n * sizeof(h_list *));
+
+    return res;
+}
+
 
 char get_h_list(h_list *list_h, size_t i)
 {
@@ -97,6 +108,54 @@ void set_h_matrix(h_matrix *mat_h, char x, size_t i, size_t j)
 }
 
 
+void write_char_h(h_list *list_h, char x, size_t p)
+{
+    unsigned char t;
+    if (p < (list_h->n - 7))
+    {
+        t = x;
+        for (size_t i = 0; i < 8; i++)
+        {
+            list_h->list[p + i] = t % 2;
+            t = t / 2;
+        }
+    }
+}
+
+
+char read_char_h(h_list *list_h, size_t p)
+{
+    if (p < (list_h->n - 7))
+    {
+        unsigned char x = 0;
+        for (size_t i = 8; i > 0; i--)
+        {
+            x *= 2;
+            x += list_h->list[p + i - 1];
+        }
+        return x;
+    }
+}
+
+
+void write_bit_h(h_list *list_h, unsigned char x, size_t p)
+{
+    if (p < list_h->n)
+    {
+        list_h->list[p] = x % 2;
+    }
+}
+
+
+char read_bit_h(h_list *list_h, size_t p)
+{
+    if (p < list_h->n)
+    {
+        return 255 * list_h->list[p];
+    }
+}
+
+
 void set_all_h_list(h_list *list_h, char x)
 {
     for (size_t i = 0; i < list_h->n; i++)
@@ -112,6 +171,21 @@ void set_all_i_list(i_list *list_i, int x)
     {
         list_i->list[i] = x;
     }
+}
+
+
+// Determines if the h_list is only 0
+char is_all_nil(h_list *list_h)
+{
+    char ok = 1;
+    for (size_t i = 0; i < list_h->n; i++)
+    {
+        if (list_h->list[i])
+        {
+            ok = 0;
+        }
+    }
+    return ok;
 }
 
 
@@ -147,18 +221,32 @@ int shift_i(i_list *list_i, int l)
 }
 
 
-// Determines if the h_list is only 0
-char is_all_nil(h_list *list_h)
+// Copy n elements of list_a into list_b if possible
+int copy_h(h_list *list_a, h_list *list_b, size_t n, size_t s)
 {
-    char ok = 1;
-    for (size_t i = 0; i < list_h->n; i++)
+    if (n > list_b->m_s || n * s >list_a->n)
     {
-        if (list_h->list[i])
-        {
-            ok = 0;
-        }
+        return 1;
     }
-    return ok;
+
+    list_b->n = n;
+    for (size_t i = 0; i < n; i++)
+    {
+        list_b->list[i] = list_a->list[i * s];
+    }
+    return 0;
+}
+
+
+hh_list *deep_copy(hh_list *list_hh)
+{
+    hh_list *res = chhl(list_hh->n, list_hh->m_e);
+    for (size_t i = 0; i < res->n; i++)
+    {
+        res->list[i] = chl(list_hh->list[i]->n, list_hh->list[i]->m_s);
+        copy_h(list_hh->list[i], res->list[i], res->list[i]->n, 1);
+    }
+    return res;
 }
 
 
@@ -391,6 +479,106 @@ a_matrix * convert_h(h_matrix *mat)
 }
 
 
+hh_list * read_file_h(FILE *fp, size_t n)
+{
+    if (n % 8)
+    {
+        return NULL;
+    }
+
+    size_t s = file_size(fp);
+    size_t m = (s % n) ? (s / n) + 1 : (s / n); // Size in bytes
+    m *= 8;                                     // Size in bits
+
+    hh_list *res = chhl(m, s);
+    for (size_t i = 0; i < m; i++)
+    {
+        res->list[i] = chl(n, n);
+    }
+
+    unsigned char *buffer = malloc(s * sizeof(char));
+    fread(buffer, sizeof(char), s, fp);
+
+    for (size_t i = 0; i < s; i++)
+    {
+        write_char_h(res->list[8 * i / n], buffer[i], (8 * i) % n);
+    }
+
+    return res;
+}
+
+
+int write_file_h(FILE *fp, hh_list *list_hh)
+{
+    size_t c = 0;
+    unsigned char x;
+
+    for (size_t i = 0; i < list_hh->n; i++)
+    {
+        if (list_hh->list[i]->n % 8)
+        {
+            return 1;
+        }
+
+        for (size_t j = 0; j < (list_hh->list[i]->n / 8); j++)
+        {
+            if (c < list_hh->m_e)
+            {
+                x = read_char_h(list_hh->list[i], 8 * j);
+                fwrite(&x, sizeof(char), 1, fp);
+            }
+            c ++;
+        }
+    }
+    return 0;
+}
+
+
+hh_list * read_bit_file_h(FILE *fp, size_t n)
+{
+
+    size_t s = file_size(fp);
+    size_t m = (s % n) ? (s / n) + 1 : (s / n); // Number of lists to create
+
+    hh_list *res = chhl(m, s);
+    for (size_t i = 0; i < m; i++)
+    {
+        res->list[i] = chl(n, n);
+    }
+
+    unsigned char *buffer = malloc(s * sizeof(char));
+    fread(buffer, sizeof(char), s, fp);
+
+    for (size_t i = 0; i < s; i++)
+    {
+        write_bit_h(res->list[i / n], buffer[i], i % n);
+    }
+
+    return res;
+}
+
+
+int write_bit_file_h(FILE *fp, hh_list *list_hh)
+{
+    size_t c = 0;
+    unsigned char x;
+
+    for (size_t i = 0; i < list_hh->n; i++)
+    {
+        for (size_t j = 0; j < (list_hh->list[i]->n); j++)
+        {
+            if (c < list_hh->m_e)
+            {
+                x = read_bit_h(list_hh->list[i], j);
+                fwrite(&x, sizeof(char), 1, fp);
+            }
+            c ++;
+        }
+    }
+    return 0;
+}
+
+
 void print_h_list(h_list *list_h)
 {
     printf("[");
@@ -467,6 +655,15 @@ void print_a_matrix(a_matrix *mat_a)
 }
 
 
+void print_hh_list(hh_list *list_hh)
+{
+    for (size_t i = 0; i < list_hh->n; i++)
+    {
+        print_h_list(list_hh->list[i]);
+    }
+}
+
+
 void free_h_list(h_list *list_h)
 {
     free(list_h->list);
@@ -510,4 +707,16 @@ void free_a_matrix(a_matrix *mat_a)
     free(mat_a->list_n);
 
     free(mat_a);
+}
+
+
+void free_hh_list(hh_list *list_hh)
+{
+    for (size_t i = 0; i < list_hh->n; i++)
+    {
+        free_h_list(list_hh->list[i]);
+    }
+    free(list_hh->list);
+
+    free(list_hh);
 }

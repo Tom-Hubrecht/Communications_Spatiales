@@ -1,6 +1,9 @@
 # Ignore Visual Studio Code files
 .vscode/
 
+# Ignore Python cache
+__pycache__
+
 # Ignore object files
 *.o
 
