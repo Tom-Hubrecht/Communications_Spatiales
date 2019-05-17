@@ -24,7 +24,7 @@ int main(void)
     double z;
 
     //demo_ldpc_basic("junob", 0.3, 200);
-    demo_turbo_iter("junob", 0.95, 20);
+    demo_turbo_iter("junob", 0.5, 10);
 //    printf("Noise sigma : %f\n", s);
 /*
     h_matrix *test = create_base(2000, 35, 20);

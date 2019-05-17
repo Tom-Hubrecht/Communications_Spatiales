@@ -558,6 +558,7 @@ h_list * decode_turbo_iter(s_list *buf, double s, size_t i_max)
         interleaved = 0;
 
         k = decode_part(X1, Y1, llr, s);
+        substract_s(llr, X1);
         if (debug)
         {
             printf("\tFirst pass on the decoder\n");
@@ -569,29 +570,28 @@ h_list * decode_turbo_iter(s_list *buf, double s, size_t i_max)
         // negatives to check for this situation
         max_min(Mm, llr);
 
-        if (Mm[0] > -26 || Mm[1] < 26)
+
+        interleaved = 1;
+
+        // We need to interleave the llr to match the pattern of Y2
+        interleave(X2, llr);
+        if (debug)
         {
-            interleaved = 1;
-
-            // We need to interleave the llr to match the pattern of Y2
-            interleave(X2, llr);
-            if (debug)
-            {
-                printf("\tInterleaved the data\n");
-            }
-
-            k = decode_part(X2, Y2, llr, s);
-            if (debug)
-            {
-                printf("\tSecond pass on the decoder\n");
-                printf("\t\t- Error code : %d\n", k);
-            }
-
-            // Update X1 with the new values
-            deinterleave(X1, llr);
+            printf("\tInterleaved the data\n");
         }
 
-        if (Mm[0] < -20 && Mm[1] > 20)
+        k = decode_part(X2, Y2, llr, s);
+        substract_s(llr, X2);
+        if (debug)
+        {
+            printf("\tSecond pass on the decoder\n");
+            printf("\t\t- Error code : %d\n", k);
+        }
+
+        // Update X1 with the new values
+        deinterleave(X1, llr);
+
+        if (Mm[0] < -5000000 && Mm[1] > 5000000)
         {
             done = 1;
             if (debug)

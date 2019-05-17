@@ -1,0 +1,204 @@
+\documentclass[11pt]{beamer}
+\usefonttheme[onlymath]{serif}
+\usepackage[utf8]{inputenc}
+\usepackage{textcomp}
+\usepackage{lmodern}
+\usepackage{ragged2e}
+\usetheme{Frankfurt}
+\author{Tom Hubrecht}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows}
+\graphicspath{ {Images/} }
+
+%% Beamer Options %%
+\setbeamertemplate{navigation symbols}{}
+
+\setbeamertemplate{footline}
+{
+	\leavevmode%
+	\hbox{%
+		\begin{beamercolorbox}[wd=.4\paperwidth,ht=2.25ex,dp=1ex,center]{author in head/foot}%
+			\usebeamerfont{author in head/foot}\insertshortauthor
+		\end{beamercolorbox}%
+		\begin{beamercolorbox}[wd=.6\paperwidth,ht=2.25ex,dp=1ex,center]{title in head/foot}%
+			\usebeamerfont{title in head/foot}\insertshorttitle\hspace*{3em}
+			\insertframenumber{} / \inserttotalframenumber\hspace*{1ex}
+	\end{beamercolorbox}}%
+	\vskip0pt%
+}
+
+
+\begin{document}
+% Definition of blocks:
+\tikzset{%
+	block/.style    	= {draw, thick, rectangle, minimum height = 3em, minimum width = 3em},
+	rsc/.style			= {draw, thick, rectangle, minimum height = 3em, minimum width = 4em},
+	smallblock/.style 	= {draw, thick, rectangle, minimum height = 1em, minimum width = 1em, node distance = 2cm},
+	sum/.style      	= {draw, circle, node distance = 1.5cm}, % Adder
+	input/.style    	= {coordinate}, % Input
+	output/.style   	= {coordinate} % Output
+}
+
+%Defining string as labels of certain blocks.
+\newcommand{\suma}{\Large$+$}
+\newcommand{\inte}{$\displaystyle \int$}
+\newcommand{\derv}{\huge$\frac{d}{dt}$}
+\newcommand{\inpt}{$\boldsymbol{\circ}$}
+
+
+	\title{Transmission d'informations entre la Terre et les sondes spatiales}
+	\date[]{}
+	
+\begin{frame}[plain]
+	\maketitle
+\end{frame}
+
+\begin{frame}[plain]
+\frametitle{Table des mati\`eres}
+	\tableofcontents
+\end{frame}
+
+\section{G\'en\'eralit\'es}
+
+\subsection{Probl\'ematique}
+\begin{frame}{Exploration spatiale}
+	
+\end{frame}
+
+\subsection{Mod\'elisation}
+\begin{frame}{Th\'eorie de l'information}
+	\begin{tikzpicture}[auto, thick, node distance=2.5cm, >=triangle 45]
+		\draw % Drawing the diagram of a communication system :
+		node at (0, 0.9) {\small $Source$}
+		node [block, name=source] {} 
+		node at (2.5, 0.9) {\small $\acute{E}metteur$}
+		node [block, right of=source] (emetteur) {}
+		node at (4.5, 0.5) {\small $Canal$}
+		node [smallblock, right of=emetteur] (canal) {}
+		node at (6.5, 0.9) {\small $R\acute{e}cepteur$}
+		node at (6.5, 0) [block] (recepteur) {}
+		node at (9, 0.9) {\small $Destination$}
+		node [block, right of=recepteur] (destination) {}
+		node at (4.5, -3.1) [text width=2cm, text centered] {\small$Source$ $de$ $bruit$}
+		node at (4.5, -2) [block] (bruit) {}
+		;
+
+		% Joining blocks. 
+		% Commands \draw with options like [->] must be written individually
+		\draw[->](source) -- node [below] {\scriptsize Message}(emetteur);
+		\draw[->](emetteur) -- node [below] {\scriptsize Signal} (canal);
+		\draw[->](canal) -- node [below] {\scriptsize Signal} (recepteur);
+		\draw node at (5.3, -0.6) {\scriptsize re\c{ç}u};
+		\draw[->](recepteur) -- node [below] {\scriptsize Message} (destination);
+		\draw[->] (bruit) -- (canal);
+	\end{tikzpicture}
+	\begin{itemize}
+		\item Capacit\'e du canal $C$
+	\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Cas de l'espace}
+	\begin{itemize}	
+		\item Canal de propagation gaussien
+		\item Capacit\'e : $C = W.\log_{2}(1 + \frac{E_b}{N_0}) \quad bit.s^{-1}$
+		\begin{itemize}
+			\item[-] $W$ : nombre de bits \'emis par seconde
+			\item[-] $\frac{E_b}{N_0}$ : rapport signal sur bruit
+		\end{itemize}
+	\end{itemize}
+\end{frame}
+
+\subsection{Algorithmes de codage}
+
+\begin{frame}{D\'efinitions}
+	\begin{itemize}
+		\item Rapport de vraisemblance logarithmique (LLR) : $\Lambda(d_k) = \log(\frac{P(d_k = 1)}{P(d_k = 0)})$
+		\item Taux de transmission : $R = \frac{\text{nombre de bits du message}}{\text{nombre de bits envoy\'es}}$
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Plusieurs classes de codes}
+	\begin{itemize}
+		\item Turbocodes
+		\item Codes LDPC (Low Density Parity Checks)
+		\item Codage par convolution
+		\item Codes Reed-Solomon
+	\end{itemize}
+\end{frame}
+
+\section{Turbocodes}
+\subsection{Fonctionnement}
+\begin{frame}{Codage}
+	\begin{tikzpicture}[auto, thick, >=triangle 45]
+		\draw % Drawing the turbo encoder
+		node at (0, 3) {\inpt}
+		node at (0, 3.3) {\scriptsize $d_k$}
+		node at (0.075, 3) [input] (stream) {}
+		node at (2, 1.5) [input] (mid) {}
+		node at (2, 0) [block] (interleaver) {\scriptsize Entrelaceur}
+		node at (4, 1.5) [rsc] (rsc1) {Enc$_{1}$}
+		node at (4, -1.5) [rsc] (rsc2) {Enc$_{2}$}
+		node at (7, 3) [right] (xk) {$X_k$}
+		node at (7, 1.5) [right] (y1k) {$Y_{1,k}$}
+		node at (7, -1.5) [right] (y2k) {$Y_{2,k}$}
+		;
+		
+		% Drawing the arrows
+		\draw[->] (stream) -| (interleaver);
+		\draw[->] (stream) -- (xk);
+		\draw[->] (rsc1) -- (y1k);
+		\draw[->] (rsc2) -- (y2k);
+		\draw[->] (interleaver) |- (rsc2);
+		\draw[->] (mid) -- (rsc1);
+	\end{tikzpicture}
+\end{frame}
+
+\begin{frame}{Composant Enc}
+	\begin{tikzpicture}[auto, thick, node distance = 1.5cm, >=triangle 45]
+		\draw % Drawing the RSC component
+		node at (-0.5, 3) {\inpt}
+		node at (-0.5, 3.3) {\scriptsize $d_k$}
+		node at (-0.425, 3) [input] (stream) {\inpt}
+		node at (0, 3) [input] (mid) {}
+		node [sum, right of=stream] (s1) {$+$}
+		node [smallblock, right of=s1] (m1) {D}
+		node [smallblock, right of=m1] (m2) {D}
+		node [smallblock, right of=m2] (m3) {D}
+		node [smallblock, right of=m3] (m4) {D}
+		node [sum, below of=m1] (s2) {$+$}
+		node [sum, below of=m3] (s3) {$+$}
+		node [sum, below of=m4] (s4) {$+$}
+		node [sum, above of=m3] (s5) {$+$}
+		node [right of=s4] (out) {$Y_k$}
+		;
+		
+		% Drawing the arrows
+		\draw[->] (stream) -- (s1);
+		\draw[->] (s1) -- (m1);
+		\draw[->] (s1) -- (m1);
+		\draw[->] (m1) -- (m2);
+		\draw[->] (m2) -- (m3);
+		\draw[->] (m3) -- (m4);
+		\draw[->] (m4) |- (s5);
+		\draw[->] (mid) |- (s2);
+		\draw[->] (m1) -- (s2);
+		\draw[->] (s2) -- (s3);
+		\draw[->] (m3) -- (s3);
+		\draw[->] (s3) -- (s4);
+		\draw[->] (m4) -- (s4);
+		\draw[->] (s5) -| (s1);
+		\draw[->] (s4) -- (out);
+	\end{tikzpicture}
+\end{frame}
+
+\subsection{Exp\'erience}
+
+\section{Codes LDPC}
+\subsection{Fonctionnement}
+\subsection{Impl\'ementations}
+
+\section{Comparaison}
+
+\end{document}

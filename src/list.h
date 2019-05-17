@@ -71,6 +71,8 @@ char is_all_nil(h_list *list_h);
 int append_i(i_list *list_i, int x);
 int shift_i(i_list *list_i, int l);
 
+int substract_s(s_list *list_a, s_list *list_b);
+
 int copy_h(h_list *list_a, h_list *list_b, size_t n, size_t s);
 hh_list *deep_copy(hh_list *list_hh);
 

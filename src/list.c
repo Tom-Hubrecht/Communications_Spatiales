@@ -221,6 +221,21 @@ int shift_i(i_list *list_i, int l)
 }
 
 
+int substract_s(s_list *list_a, s_list *list_b)
+{
+    if (list_a->n != list_b->n)
+    {
+        return 1;
+    }
+
+    for (size_t i = 0; i < list_a->n; i++)
+    {
+        list_a->list[i] -= list_b->list[i];
+    }
+    return 0;
+}
+
+
 // Copy n elements of list_a into list_b if possible
 int copy_h(h_list *list_a, h_list *list_b, size_t n, size_t s)
 {
