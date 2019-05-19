@@ -1,8 +1,6 @@
 LIB = ../lib/
 BIT_ARR_PATH = $(LIB)BitArray
 BIT_ARR_ARGS = -I $(BIT_ARR_PATH) -L $(BIT_ARR_PATH) -lbitarr
-BMP_PATH = $(LIB)libbmp
-BMP_ARGS = -I $(BMP_PATH) -L $(BMP_PATH) -lbmp
 RPI_ARGS = -lwiringPi
 
 LIST = list.c
@@ -12,17 +10,15 @@ LDPC = ldpc.c
 TESTS = tests.c $(TURBO)
 RPI = rpi.c
 BASIC = basic.c
+DEMO = demo.c
 
-MAIN = $(TURBO) $(RPI) $(LIST) $(LDPC) $(BASIC)
-MAIN_ARGS = $(BIT_ARR_ARGS) $(RPI_ARGS) $(BMP_ARGS) -lm
+MAIN = $(TURBO) $(RPI) $(LIST) $(LDPC) $(BASIC) $(DEMO)
+MAIN_ARGS = $(BIT_ARR_ARGS) $(RPI_ARGS) -lm
 
 all: codage libs
 
-codage:	codage.c random.c turbocode.c rpi.c list.c ldpc.c basic.c
+codage: $(MAIN)
 	gcc -o codage codage.c $(MAIN) $(MAIN_ARGS)
-
-packet: packet.c
-	gcc -c packet.c $(BIT_ARR_ARGS)
 
 random: random.c
 	gcc -c random.c $(BIT_ARR_ARGS)

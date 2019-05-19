@@ -32,8 +32,5 @@ void min_max(double mM[2], s_list *X);
 void max_min(double mM[2], s_list *X);
 h_list * decode_turbo_basic(s_list *buf, double s);
 h_list * decode_turbo_iter(s_list *buf, double s, size_t i_max);
-int demo_turbo_basic(char *file_name, double s);
-int demo_turbo_iter(char *file_name, double s, size_t i_max);
-
 
 #endif

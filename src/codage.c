@@ -7,12 +7,12 @@
 #include "../lib/BitArray/bit_array.h"
 #include "../lib/BitArray/bar.h"
 
-#include "random.h"
 #include "turbocode.h"
-#include "list.h"
-#include "basic.h"
-
 #include "ldpc.h"
+#include "list.h"
+#include "random.h"
+#include "basic.h"
+#include "demo.h"
 
 
 int main(void)
