@@ -11,4 +11,6 @@ int nb_errors(h_list *og_mes, h_list *mes);
 
 size_t file_size(FILE *fp);
 
+double f(double b);
+
 #endif

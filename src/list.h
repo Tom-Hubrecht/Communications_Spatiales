@@ -65,8 +65,11 @@ char read_bit_h(h_list *list_h, size_t p);
 
 void set_all_h_list(h_list *list_h, char x);
 void set_all_i_list(i_list *list_i, int x);
+void aet_all_s_list(s_list *list_s, double x);
 
 char is_all_nil(h_list *list_h);
+
+double min_s(s_list *list_s);
 
 int append_i(i_list *list_i, int x);
 int shift_i(i_list *list_i, int l);
@@ -81,6 +84,7 @@ void max_i_list(i_list *list_i, i_list *res);
 h_list * product_h(h_matrix *mat, h_list *vect);
 h_list * product_a(a_matrix *mat, h_list *vect);
 int product_a_in_place(a_matrix *mat, h_list *vect, h_list *res);
+int product_s_ip(a_matrix *mat, s_list *vect, s_list *res);
 h_matrix * juxtapose_h(h_matrix *mat, char dir);
 a_matrix * juxtapose_a(h_matrix *mat, char dir);
 

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include "list.h"
 #include "basic.h"
@@ -174,6 +175,15 @@ void set_all_i_list(i_list *list_i, int x)
 }
 
 
+void set_all_s_list(s_list *list_s, double x)
+{
+    for (size_t i = 0; i < list_s->n; i++)
+    {
+        list_s->list[i] = x;
+    }
+}
+
+
 // Determines if the h_list is only 0
 char is_all_nil(h_list *list_h)
 {
@@ -186,6 +196,22 @@ char is_all_nil(h_list *list_h)
         }
     }
     return ok;
+}
+
+
+double min_abs_s(s_list *list_s)
+{
+    double s = INFINITY;
+
+    for (size_t i = 0; i < list_s->n; i++)
+    {
+        if (fabs(list_s->list[i]) < s)
+        {
+            s = fabs(list_s->list[i]);
+        }
+    }
+
+    return s;
 }
 
 
@@ -349,6 +375,27 @@ int product_a_in_place(a_matrix *mat, h_list *vect, h_list *res)
             {
                 res->list[i] ^= 1;
             }
+        }
+    }
+    return 0;
+}
+
+
+int product_s_ip(a_matrix *mat, s_list *vect, s_list *res)
+{
+    if (mat->m != vect->n || mat->n > res->m_s)
+    {
+        return 1;
+    }
+
+    res->n = mat->n;
+    set_all_s_list(res, 0.0);
+
+    for (size_t i = 0; i < mat->n; i++)
+    {
+        for (size_t k = 0; k < mat->list_n[i]->n; k++)
+        {
+            res->list[i] += vect->list[mat->list_n[i]->list[k]];
         }
     }
     return 0;

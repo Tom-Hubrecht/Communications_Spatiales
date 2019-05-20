@@ -12,13 +12,13 @@ RPI = rpi.c
 BASIC = basic.c
 DEMO = demo.c
 
-MAIN = $(TURBO) $(RPI) $(LIST) $(LDPC) $(BASIC) $(DEMO)
+MAIN = codage.c $(TURBO) $(RPI) $(LIST) $(LDPC) $(BASIC) $(DEMO)
 MAIN_ARGS = $(BIT_ARR_ARGS) $(RPI_ARGS) -lm
 
 all: codage libs
 
 codage: $(MAIN)
-	gcc -o codage codage.c $(MAIN) $(MAIN_ARGS)
+	gcc -o codage $(MAIN) $(MAIN_ARGS)
 
 random: random.c
 	gcc -c random.c $(BIT_ARR_ARGS)

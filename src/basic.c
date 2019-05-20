@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <math.h>
 
 #include "basic.h"
 #include "random.h"
@@ -58,4 +59,11 @@ size_t file_size(FILE *fp)
     fseek(fp, 0, SEEK_SET);
 
     return size;
+}
+
+
+// Returns f(beta) as defined in Gallager's work
+double f(double b)
+{
+    return log((exp(b) + 1) / (exp(b) - 1));
 }

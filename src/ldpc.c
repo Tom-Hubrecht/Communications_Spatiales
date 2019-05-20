@@ -80,7 +80,7 @@ h_list * encode_ldpc_a(a_matrix *gen, h_list *mes)
 
 
 // Decode the received message res with the decoding matrix mat
-// Returns 0 if the decoding is succesful or the number of iterations if not
+// Returns the number of iterations
 int decode_ldpc_a_basic(a_matrix *mat, h_list *mes, size_t nb_max)
 {
     h_list *verif = product_a(mat, mes);
@@ -128,3 +128,75 @@ int decode_ldpc_a_basic(a_matrix *mat, h_list *mes, size_t nb_max)
     return iter;
 }
 
+
+int decode_ldpc_proba(a_matrix *mat, s_list *mes, double s, size_t nb_max)
+{
+    // Used to store the sign of the llr
+    h_list *alpha = chl(mes->n, mes->n);
+
+    // Used to store the absolute value of the llr
+    s_list *beta = csl(mes->n, mes->n);
+
+    // To store f(beta)
+    s_list *f_beta = csl(mes->n, mes->n);
+
+    // To store the temporary results
+    s_list *tmp = csl(mes->n, mes->n);
+
+    // To store the sum of f(beta_{i,l})
+    s_list *f_sum = csl(mat->n, mat->n);
+
+    // Initialize alpha and beta
+    double l;
+
+    for (size_t d = 0; d < mes->n; d++)
+    {
+        l = log(p_trans(mes->list[d], 1, s) / p_trans(mes->list[d], 0, s));
+        alpha->list[d] = (l > 0 ? 1 : -1);
+        beta->list[d] = fabs(l);
+    }
+
+    size_t iter = 0;
+    double m = min_s(beta);
+
+    char a;
+    double b;
+
+    while (iter < nb_max && m < 5000000)
+    {
+        // Fill f_beta
+        for (size_t i = 0; i < beta->n; i++)
+        {
+            f_beta->list[i] = f(beta->list[i]);
+        }
+
+        // Compute the right sums
+        product_s_ip(mat, f_beta, f_sum);
+
+        for (size_t d = 0; d < mes->n; d++)
+        {
+            tmp->list[d] = alpha->list[d] * beta->list[d];
+
+            // Compute f of the sum and the product of alpha_{i,l}
+            for (size_t i = 0; i < mat->list_m[d]->n; i++)
+            {
+                a = alpha->list[d];
+                for (size_t k = 0; k < mat->list_n[i]->n; k++)
+                {
+                    a *= alpha->list[mat->list_n[i]->list[k]];
+                }
+
+                tmp->list[d] += a * f(f_sum->list[0]);
+            }
+
+
+        }
+
+
+
+    }
+
+
+
+    return 0;
+}

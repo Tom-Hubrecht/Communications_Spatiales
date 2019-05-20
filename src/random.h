@@ -19,11 +19,10 @@ typedef bar generator;
 void permutation(i_list *list_i);
 double box_muller(double m, double s);
 void addNoise(bar *message, double s, double noisy[]);
-double pTransition(double x, size_t d, double s);
+double pTransition(double x, char d, double s);
 double normal(double x, double m, double s);
 double mean(double *Z, size_t n);
 double variance(double *Z, size_t n);
-
 
 bar * initGenerator(void);
 char yield(generator *gen);
@@ -31,5 +30,7 @@ bar * sequence(generator *gen, size_t n);
 bar * combine(generator *gen, bar *message);
 void resetGenerator(generator *gen);
 void freeGenerator(generator *gen);
+
+#define p_trans pTransition
 
 #endif

@@ -39,7 +39,7 @@ void addNoise(bar *message, double s, double *noisy)
 
 
 // Compute the transition probability of the channel
-double pTransition(double x, size_t d, double s)
+double pTransition(double x, char d, double s)
 {
     char mu = 2 * d - 1; // -1 if d = 0, 1 if d = 1
     double res;

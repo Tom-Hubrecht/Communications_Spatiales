@@ -145,7 +145,7 @@ int demo_turbo_iter(char *file_name, double s, size_t i_max)
         printf("\t- Encoded\n");
 
         s_list *noisy = add_noise(res, s);
-        printf("\t- Added gaussian noise\n");
+        printf("\t- Added gaussian noise with s = %f\n", s);
 
         h_list *noisy_h = decode_h_basic(noisy);
         if (debug)
@@ -208,8 +208,8 @@ int demo_ldpc_basic(char *file_name, double s, size_t i_max)
     strcpy(path_d, path);
 
     strcat(path, ".bt");
-    strcat(path_n, "_ldpc_n.bt");
-    strcat(path_d, "_ldpc_d.bt");
+    strcat(path_n, "_ldpc_basic_n.bt");
+    strcat(path_d, "_ldpc_basic_d.bt");
 
     FILE *fp = fopen(path, "r");
     FILE *fn = fopen(path_n, "w");
