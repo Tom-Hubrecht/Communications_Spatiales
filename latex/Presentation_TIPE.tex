@@ -9,6 +9,7 @@
 \usepackage{graphicx}
 \usepackage{tikz}
 \usetikzlibrary{shapes,arrows}
+\usepackage{amsmath}
 \graphicspath{ {Images/} }
 
 %% Beamer Options %%
@@ -114,23 +115,26 @@
 
 \begin{frame}{D\'efinitions}
 	\begin{itemize}
-		\item Rapport de vraisemblance logarithmique (LLR) : $\Lambda(d_k) = \log(\frac{P(d_k = 1)}{P(d_k = 0)})$
+		\item Rapport de vraisemblance logarithmique (LLR) : $\Lambda(d_k) = \log(\frac{\mathbf{P}(d_k = 1)}{\mathbf{P}(d_k = 0)})$
 		\item Taux de transmission : $R = \frac{\text{nombre de bits du message}}{\text{nombre de bits envoy\'es}}$
+		\item Codage syst\'ematique
+		\item Probabilit\'e \`a posteriori (PAP)
 	\end{itemize}
 \end{frame}
 
 \begin{frame}{Plusieurs classes de codes}
 	\begin{itemize}
+		\item Codage par convolution
 		\item Turbocodes
 		\item Codes LDPC (Low Density Parity Checks)
-		\item Codage par convolution
 		\item Codes Reed-Solomon
 	\end{itemize}
 \end{frame}
 
 \section{Turbocodes}
-\subsection{Fonctionnement}
-\begin{frame}{Codage}
+
+\subsection{Codage}
+\begin{frame}{Sch\'ema d'un encodeur}
 	\begin{tikzpicture}[auto, thick, >=triangle 45]
 		\draw % Drawing the turbo encoder
 		node at (0, 3) {\inpt}
@@ -191,6 +195,45 @@
 		\draw[->] (s5) -| (s1);
 		\draw[->] (s4) -- (out);
 	\end{tikzpicture}
+\end{frame}
+
+\subsection{D\'ecodage}
+\begin{frame}{Sch\'ema d'un d\'ecodeur}
+	Sch\'ema
+\end{frame}
+
+\begin{frame}{Processus de d\'ecodage}
+	Le d\'ecodeur re\c{c}oit en entr\'ee trois variables r\'eelles :
+	\begin{align*} \label{dec_input}
+		x_k & = (2.X_k - 1) + a_k \\
+		y_{1,k} & = (2.Y_{1,k} - 1) + b_k \\
+		y_{2,k} & = (2.Y_{2,k} - 1) + c_k
+	\end{align*}
+	o\`u $a_k, b_k$ et $c_k$ sont des variables al\'eatoires suivant une loi normale de moyenne nulle et de variance $\sigma^2$
+\end{frame}
+
+\begin{frame}{Principe de d\'ecodage}
+	On note $S_k$ l'\'etat de l'encodeur au moment k, $S_k = (a_k, a_{k-1}, a_{k-2}, a_{k-3})$ \\
+	$S_0 = S_N = 0$ \\ \smallskip
+
+	La sortie du canal fournie \`a l'entr\'ee du d\'ecodeur est la suite $R_1^N = (R_1,...,R_k,...,R_N)$
+	o\`u $R_k = (x_k,y_{j,k})$ \\ \smallskip
+	
+	On introduit $\lambda_k^i(m) = \mathbf{P}(X_k = i, S_k = m / R_1^N)$, d'o\`u $\mathbf{P}(d_k = i / R_1^N) = \sum\limits_{m} \lambda_k^i$ et $\Lambda(X_k) = \log\left(\dfrac{\sum\limits_{m} \lambda_k^1}{\sum\limits_{m} \lambda_k^0}\right) $
+\end{frame}
+
+\begin{frame}
+	On introduit des fonctions :
+	\begin{itemize}
+		\item $\alpha_k^i(m) = \dfrac{\mathbf{P}(X_k = i, S_k = m, R_1^k)}{\mathbf{P}(R_1^k)}.\mathbf{P}(X_k = i, S_k = m / R_1^k)$
+		\item $\beta_k(m) = \dfrac{\mathbf{P}(R_{k+1}^N / S_k = m)}{\mathbf{P}(R_(k+1)^N / R_1^k)}$
+		\item $\gamma_i(R_k, m', m) = \mathbf{P}(X_k = i, R_k, S_k = m/ S_{k-1} = m')$
+	\end{itemize}
+	On a par le calcul : $\lambda_k^i(m) = \alpha_k^i(m).\beta_k(m)$
+\end{frame}
+
+\begin{frame}{Algorithme de calcul}
+	
 \end{frame}
 
 \subsection{Exp\'erience}

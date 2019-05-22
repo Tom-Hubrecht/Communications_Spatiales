@@ -129,7 +129,7 @@ int decode_ldpc_a_basic(a_matrix *mat, h_list *mes, size_t nb_max)
 }
 
 
-int decode_ldpc_proba(a_matrix *mat, s_list *mes, double s, size_t nb_max)
+h_list * decode_ldpc_proba(a_matrix *mat, s_list *mes, double s, size_t nb_max)
 {
     // Used to store the sign of the llr
     h_list *alpha = chl(mes->n, mes->n);
@@ -162,8 +162,10 @@ int decode_ldpc_proba(a_matrix *mat, s_list *mes, double s, size_t nb_max)
     char a;
     double b;
 
-    while (iter < nb_max && m < 5000000)
+    while (iter < nb_max && m < 5000)
     {
+        iter ++;
+
         // Fill f_beta
         for (size_t i = 0; i < beta->n; i++)
         {
@@ -175,28 +177,53 @@ int decode_ldpc_proba(a_matrix *mat, s_list *mes, double s, size_t nb_max)
 
         for (size_t d = 0; d < mes->n; d++)
         {
-            tmp->list[d] = alpha->list[d] * beta->list[d];
-
-            // Compute f of the sum and the product of alpha_{i,l}
-            for (size_t i = 0; i < mat->list_m[d]->n; i++)
+            if (beta->list[d] < 5000)
             {
-                a = alpha->list[d];
-                for (size_t k = 0; k < mat->list_n[i]->n; k++)
-                {
-                    a *= alpha->list[mat->list_n[i]->list[k]];
-                }
+                tmp->list[d] = alpha->list[d] * beta->list[d];
 
-                tmp->list[d] += a * f(f_sum->list[0]);
+                // Compute f of the sum and the product of alpha_{i,l}
+                for (size_t i = 0; i < mat->list_m[d]->n; i++)
+                {
+                    a = alpha->list[d];
+                    for (size_t k = 0; k < mat->list_n[i]->n; k++)
+                    {
+                        a *= alpha->list[mat->list_n[i]->list[k]];
+                    }
+
+                    tmp->list[d] += a * f(f_sum->list[mat->list_m[d]->list[i]] -
+                                            f_beta->list[d]);
+                }
             }
 
 
         }
 
+        // Update alpha and beta
+        for (size_t d = 0; d < mes->n; d++)
+        {
+            alpha->list[d] = (tmp->list[d] > 0 ? 1 : -1);
+            beta->list[d] = fabs(tmp->list[d]);
+        }
 
+        m = min_s(beta);
+    }
 
+    // Put the results in tmp
+    for (size_t d = 0; d < mes->n; d++)
+    {
+        tmp->list[d] = alpha->list[d] * beta->list[d];
     }
 
 
+    h_list *res = decode_h_basic(tmp);
 
-    return 0;
+    //print_s_list(tmp);
+
+    free_h_list(alpha);
+    free_s_list(beta);
+    free_s_list(f_beta);
+    free_s_list(f_sum);
+    free_s_list(tmp);
+
+    return res;
 }

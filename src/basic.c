@@ -65,5 +65,5 @@ size_t file_size(FILE *fp)
 // Returns f(beta) as defined in Gallager's work
 double f(double b)
 {
-    return log((exp(b) + 1) / (exp(b) - 1));
+    return log((exp(-b) + 1.0) / (1.0 - exp(-b)));
 }

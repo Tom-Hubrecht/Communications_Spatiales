@@ -199,7 +199,7 @@ char is_all_nil(h_list *list_h)
 }
 
 
-double min_abs_s(s_list *list_s)
+double min_s(s_list *list_s)
 {
     double s = INFINITY;
 

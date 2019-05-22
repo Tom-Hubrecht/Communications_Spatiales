@@ -44,6 +44,11 @@ int main(int argc, char *argv[])
     {
         demo_ldpc_basic(file, s, 500);
     }
+    if (demos & 4)
+    {
+        demo_ldpc_proba(file, s, 500);
+    }
+
 
     return 0;
 }

@@ -18,6 +18,7 @@ h_list * encode_ldpc_h(h_matrix *gen, h_list *mes);
 h_list * encode_ldpc_a(a_matrix *gen, h_list *mes);
 
 int decode_ldpc_a_basic(a_matrix *mat, h_list *mes, size_t nb_max);
+h_list * decode_ldpc_proba(a_matrix *mat, s_list *mes, double s, size_t nb_max);
 
 #define cgm_h create_generator_matrix_h
 #define cgm_a create_generator_matrix_a
