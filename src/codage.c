@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
     }
     if (demos & 4)
     {
-        demo_ldpc_proba(file, s, 500);
+        demo_ldpc_proba(file, s, 10);
     }
 
 

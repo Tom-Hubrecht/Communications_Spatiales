@@ -1,9 +1,9 @@
 # Only include images and .tex files
-Presentation_TIPE.aux
-Presentation_TIPE.log
-Presentation_TIPE.nav
-Presentation_TIPE.out
-Presentation_TIPE.pdf
-Presentation_TIPE.snm
-Presentation_TIPE.synctex.gz
-Presentation_TIPE.toc
+*.aux
+*.log
+*.nav
+*.out
+*.pdf
+*.snm
+*.synctex.gz
+*.toc

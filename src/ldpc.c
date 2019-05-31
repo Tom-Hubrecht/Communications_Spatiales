@@ -177,8 +177,8 @@ h_list * decode_ldpc_proba(a_matrix *mat, s_list *mes, double s, size_t nb_max)
 
         for (size_t d = 0; d < mes->n; d++)
         {
-            if (beta->list[d] < 5000)
-            {
+            //if (beta->list[d] < 5000)
+            //{
                 tmp->list[d] = alpha->list[d] * beta->list[d];
 
                 // Compute f of the sum and the product of alpha_{i,l}
@@ -193,7 +193,7 @@ h_list * decode_ldpc_proba(a_matrix *mat, s_list *mes, double s, size_t nb_max)
                     tmp->list[d] += a * f(f_sum->list[mat->list_m[d]->list[i]] -
                                             f_beta->list[d]);
                 }
-            }
+            //}
 
 
         }

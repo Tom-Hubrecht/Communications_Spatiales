@@ -1,6 +1,7 @@
 \documentclass[11pt]{beamer}
 \usefonttheme[onlymath]{serif}
 \usepackage[utf8]{inputenc}
+\usepackage{appendixnumberbeamer}
 \usepackage{textcomp}
 \usepackage{lmodern}
 \usepackage{ragged2e}
@@ -10,7 +11,7 @@
 \usetikzlibrary{shapes,arrows}
 \usepackage{amsmath}
 \author{Tom Hubrecht}
-\graphicspath{ {Images/} }
+\graphicspath{{./Images/}}
 
 %% Beamer Options %%
 \setbeamertemplate{navigation symbols}{}
@@ -25,9 +26,31 @@
 		\begin{beamercolorbox}[wd=.6\paperwidth,ht=2.25ex,dp=1ex,center]{title in head/foot}%
 			\usebeamerfont{title in head/foot}\insertshorttitle\hspace*{3em}
 			\insertframenumber{} / \inserttotalframenumber\hspace*{1ex}
-	\end{beamercolorbox}}%
+		\end{beamercolorbox}}%
 	\vskip0pt%
 }
+
+\setbeamertemplate{section page}
+{
+	\begin{centering}
+		\begin{beamercolorbox}[sep=12pt,center]{part title}
+			\usebeamerfont{section title}\insertsection\par
+		\end{beamercolorbox}
+	\end{centering}
+}
+
+\setbeamertemplate{subsection page}
+{
+	\begin{centering}
+		\begin{beamercolorbox}[sep=10pt,center]{part title}
+			\usebeamerfont{subsection title}\insertsubsection\par
+		\end{beamercolorbox}
+	\end{centering}
+}
+
+
+\AtBeginSection{\frame[plain, noframenumbering]{\sectionpage}}
+\AtBeginSubsection{\frame[plain, noframenumbering]{\subsectionpage}}
 
 
 \begin{document}
@@ -47,30 +70,33 @@
 \newcommand{\derv}{\huge$\frac{d}{dt}$}
 \newcommand{\inpt}{$\boldsymbol{\circ}$}
 
+\title{Transmission d'informations entre la Terre et les sondes spatiales}
+\date[]{269}
 
-	\title{Transmission d'informations entre la Terre et les sondes spatiales}
-	\date[]{269}
 	
 \begin{frame}[plain]
 	\maketitle
 \end{frame}
 
-\begin{frame}[plain]
-\frametitle{Table des mati\`eres}
+\begin{frame}[plain]{Table des mati\`eres}
 	\tableofcontents
 \end{frame}
 
-\section{G\'en\'eralit\'es}
 
+\section{Introduction}
 \subsection{Probl\'ematique}
+
+
 \begin{frame}{Exploration spatiale}
 	\centering
-	
 	\includegraphics[scale=0.4]{VoyagerReverse}\\
-	La sonde Voyager 2 communique avec le Terre alors qu'elle est \`a 18 milliards de kilom\`etres.
+	La sonde Voyager 2 communique avec le Terre alors qu'elle se trouve \`a 18 milliards de kilom\`etres.
 \end{frame}
 
+
 \subsection{Mod\'elisation}
+
+
 \begin{frame}{Th\'eorie de l'information}
 	\begin{tikzpicture}[auto, thick, node distance=2.5cm, >=triangle 45]
 		\draw % Drawing the diagram of a communication system :
@@ -97,10 +123,6 @@
 		\draw[->](recepteur) -- node [below] {\scriptsize Message} (destination);
 		\draw[->] (bruit) -- (canal);
 	\end{tikzpicture}
-	\begin{itemize}
-		\item Capacit\'e du canal $C$
-	\end{itemize}
-
 \end{frame}
 
 \begin{frame}{Cas de l'espace}
@@ -114,25 +136,172 @@
 	\end{itemize}
 \end{frame}
 
-\subsection{Algorithmes de codage}
+
+\section{Codes correcteurs d'erreurs}
+\subsection{Principe}
+
+
+\begin{frame}{Principe}
+	\begin{itemize}
+		\item Permettre de contrer l'action du bruit
+		\item Se rapprocher de la limite de Shannon
+	\end{itemize}
+\end{frame}
 
 \begin{frame}{D\'efinitions}
 	\begin{itemize}
-		\item Rapport de vraisemblance logarithmique (LLR) : $\Lambda(d_k) = \log(\frac{\mathbf{P}(d_k = 1)}{\mathbf{P}(d_k = 0)})$
 		\item Taux de transmission : $R = \frac{\text{nombre de bits du message}}{\text{nombre de bits envoy\'es}}$
-		\item Codage syst\'ematique
 		\item Probabilit\'e \`a posteriori (PAP)
+		\item Rapport de vraisemblance logarithmique (LLR) : $\Lambda(d_k) = \log(\frac{\mathbf{P}(d_k = 1)}{\mathbf{P}(d_k = 0)})$
+		%\item Codage syst\'ematique
 	\end{itemize}
 \end{frame}
 
+
+\subsection{Diff\'erentes m\'ethodes}
+
+
 \begin{frame}{Plusieurs classes de codes}
 	\begin{itemize}
+		\item Codes Reed-Solomon
 		\item Codage par convolution
 		\item Turbocodes
 		\item Codes LDPC (Low Density Parity Checks)
-		\item Codes Reed-Solomon
 	\end{itemize}
 \end{frame}
+
+\begin{frame}{Plusieurs types de d\'ecodage}
+	\begin{itemize}
+		\item D\'ecodage dur (Hard Decoding)
+		\item D\'ecodage \`a d\'ecision douce (Soft decoding)
+	\end{itemize}
+\end{frame}
+
+
+\section{Impl\'ementation des codes correcteurs}
+\subsection{Choix des codes}
+
+
+\begin{frame}{Codes utilis\'es}
+	Les standards du CCSDS (Consultative Committee for Space Data Systems) pr\'econisent l'utilisation des Turbocodes et codes LDPC.
+\end{frame}
+
+
+\subsection{Repr\'esenter l'efficacit\'e des codes}
+
+
+\begin{frame}{Choix de l'image}
+	\begin{figure}
+		\includegraphics{base}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{Processus}
+	\begin{itemize}
+		\item Transformation de l'image en liste de bits
+		\item Codage du message obtenu et transformation
+		\begin{itemize}
+			\item[] $0 \to -1.0$
+			\item[] $1 \to 1.0$ 
+		\end{itemize}
+		\item Rajout d'un bruit blanc de moyenne nulle et de variance $s^2$
+		\begin{itemize}
+			\item[] $\frac{E_b}{N_0} = \frac{1}{s}$
+		\end{itemize}
+		\item Enregistrement du message bruit\'e
+		\item D\'ecodage du message et enregistrement
+		\item Recr\'eation des images obtenues \`a l'aide des listes de bits
+	\end{itemize}
+\end{frame}
+
+
+\section{R\'esultats}
+\subsection{Bruit faible}
+
+
+\begin{frame}{Turbocodes, $\frac{E_b}{N_0} = 1.5$ dB}
+	\begin{columns}
+		\begin{column}{.5\textwidth}
+			\begin{figure}
+				\includegraphics[scale=0.6]{turbo_noisy_70}\\
+				Avant d\'ecodage
+			\end{figure}
+		\end{column}
+		\begin{column}{.5\textwidth}
+			\begin{figure}
+				\includegraphics[scale=0.6]{turbo_decoded_70}\\
+				Apr\`es d\'ecodage
+			\end{figure}
+		\end{column}
+	\end{columns}
+\end{frame}
+
+\begin{frame}{Codes LDPC, $\frac{E_b}{N_0} = 2.2$ dB}
+	\begin{columns}
+		\begin{column}{.5\textwidth}
+			\begin{figure}
+				\includegraphics[scale=0.6]{ldpc_basic_noisy_60}\\
+				Avant d\'ecodage
+			\end{figure}
+		\end{column}
+		\begin{column}{.5\textwidth}
+			\begin{figure}
+				\includegraphics[scale=0.6]{ldpc_basic_decoded_60}\\
+				Apr\`es d\'ecodage
+			\end{figure}
+		\end{column}
+	\end{columns}
+\end{frame}
+
+
+\subsection{Bruit \'elev\'e}
+
+
+\begin{frame}{Turbocodes, $\frac{E_b}{N_0} = 0.13$ dB}
+	\begin{columns}
+		\begin{column}{.5\textwidth}
+			\begin{figure}
+				\includegraphics[scale=0.6]{turbo_noisy_97}\\
+				Avant d\'ecodage
+			\end{figure}
+		\end{column}
+		\begin{column}{.5\textwidth}
+			\begin{figure}
+				\includegraphics[scale=0.6]{turbo_decoded_97}\\
+				Apr\`es d\'ecodage
+			\end{figure}
+		\end{column}
+	\end{columns}
+\end{frame}
+
+\begin{frame}{Codes LDPC, $\frac{E_b}{N_0} = 0.97$ dB}
+	\begin{columns}
+		\begin{column}{.5\textwidth}
+			\begin{figure}
+				\includegraphics[scale=0.6]{ldpc_basic_noisy_80}\\
+				Avant d\'ecodage
+			\end{figure}
+		\end{column}
+		\begin{column}{.5\textwidth}
+			\begin{figure}
+				\includegraphics[scale=0.6]{ldpc_basic_decoded_80}\\
+				Apr\`es d\'ecodage
+			\end{figure}
+		\end{column}
+	\end{columns}
+\end{frame}
+
+
+\section*{Conclusion}
+
+
+
+\appendix
+
+
+
+\section{Code Informatique}
+
 
 \section{Turbocodes}
 
@@ -251,39 +420,7 @@
 
 \subsection{Exp\'erience}
 
-\begin{frame}{Bruit relativement faible}
-	\begin{columns}
-		\begin{column}{.5\textwidth}
-			\begin{figure}
-				\includegraphics[scale=0.6]{turbo_noisy_70}\\
-				Avant d\'ecodage
-			\end{figure}
-		\end{column}
-		\begin{column}{.5\textwidth}
-			\begin{figure}
-				\includegraphics[scale=0.6]{turbo_decoded_70}\\
-				Apr\`es d\'ecodage
-			\end{figure}
-		\end{column}
-	\end{columns}
-\end{frame}
 
-\begin{frame}{Bruit \'elev\'e}
-	\begin{columns}
-		\begin{column}{.5\textwidth}
-			\begin{figure}
-				\includegraphics[scale=0.6]{turbo_noisy_97}\\
-				Avant d\'ecodage
-			\end{figure}
-		\end{column}
-		\begin{column}{.5\textwidth}
-			\begin{figure}
-				\includegraphics[scale=0.6]{turbo_decoded_97}\\
-				Apr\`es d\'ecodage
-			\end{figure}
-		\end{column}
-	\end{columns}
-\end{frame}
 
 \begin{frame}{Erreurs en fonction du rapport $\frac{E_b}{N_0}$}
 	
@@ -401,39 +538,7 @@
 	\end{itemize}
 \end{frame}
 
-\begin{frame}{Bruit relativement faible}
-	\begin{columns}
-		\begin{column}{.5\textwidth}
-			\begin{figure}
-				\includegraphics[scale=0.6]{ldpc_basic_noisy_60}\\
-				Avant d\'ecodage
-			\end{figure}
-		\end{column}
-		\begin{column}{.5\textwidth}
-			\begin{figure}
-				\includegraphics[scale=0.6]{ldpc_basic_decoded_60}\\
-				Apr\`es d\'ecodage
-			\end{figure}
-		\end{column}
-	\end{columns}
-\end{frame}
 
-\begin{frame}{Bruit \'elev\'e}
-	\begin{columns}
-		\begin{column}{.5\textwidth}
-			\begin{figure}
-				\includegraphics[scale=0.6]{ldpc_basic_noisy_80}\\
-				Avant d\'ecodage
-			\end{figure}
-		\end{column}
-		\begin{column}{.5\textwidth}
-			\begin{figure}
-				\includegraphics[scale=0.6]{ldpc_basic_decoded_80}\\
-				Apr\`es d\'ecodage
-			\end{figure}
-		\end{column}
-	\end{columns}
-\end{frame}
 
 \subsection{D\'ecodage doux}
 
@@ -444,12 +549,6 @@
 		\item Calcul des nouveaux LLR
 		\item It\'eration jus'\`a des LLR suffisament \'elev\'es o\`u it\'eration maximale atteinte
 	\end{itemize}
-\end{frame}
-
-\section*{Conclusion}
-
-\begin{frame}{Conclusion}
-	En fin de compte, on dispose de codages tr\`es performants pour pallier au bruit engendr\'e par l'espace.
 \end{frame}
 
 \end{document}
