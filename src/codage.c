@@ -49,6 +49,5 @@ int main(int argc, char *argv[])
         demo_ldpc_proba(file, s, 10);
     }
 
-
     return 0;
 }

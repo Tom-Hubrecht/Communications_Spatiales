@@ -2,6 +2,8 @@
 \usefonttheme[onlymath]{serif}
 \usepackage[utf8]{inputenc}
 \usepackage{appendixnumberbeamer}
+\usepackage{listings}
+\usepackage{color}
 \usepackage{textcomp}
 \usepackage{lmodern}
 \usepackage{ragged2e}
@@ -32,25 +34,57 @@
 
 \setbeamertemplate{section page}
 {
-	\begin{centering}
-		\begin{beamercolorbox}[sep=12pt,center]{part title}
-			\usebeamerfont{section title}\insertsection\par
-		\end{beamercolorbox}
-	\end{centering}
+	\begin{beamercolorbox}[sep=12pt,center]{part title}
+		\usebeamerfont{section title}\insertsection\par
+	\end{beamercolorbox}
 }
 
 \setbeamertemplate{subsection page}
 {
-	\begin{centering}
-		\begin{beamercolorbox}[sep=10pt,center]{part title}
-			\usebeamerfont{subsection title}\insertsubsection\par
-		\end{beamercolorbox}
-	\end{centering}
+	\begin{beamercolorbox}[sep=10pt,left]{part title}
+		\usebeamerfont{subsection title}\insertsubsection\par
+	\end{beamercolorbox}
 }
 
 
 \AtBeginSection{\frame[plain, noframenumbering]{\sectionpage}}
 \AtBeginSubsection{\frame[plain, noframenumbering]{\subsectionpage}}
+
+
+%% Create a font to use in the listings %%
+%\newfontfamily\listingsfont[Scale=0.85]{droidsansmono.ttf}
+
+
+%% Define colors for the listings %%
+\definecolor{cred}{RGB}{255, 85, 85}
+\definecolor{cgreen}{RGB}{85, 255, 85}
+\definecolor{cblue}{RGB}{85, 85, 255}
+\definecolor{cblack}{RGB}{0, 0, 0}
+\definecolor{cwhite}{RGB}{255, 255, 255}
+
+
+%% Listing Options %%
+\lstdefinestyle{beamer}{
+	backgroundcolor=\color{cwhite},   
+	commentstyle=\color{cblack},
+	keywordstyle=\color{cblue}\bfseries,
+	numberstyle=\tiny\color{cblue},
+	stringstyle=\color{cred},
+	basicstyle=\ttfamily\scriptsize,
+	breakatwhitespace=false,         
+	breaklines=true,                 
+	captionpos=b,                    
+	keepspaces=true,                 
+	numbers=left,                    
+	numbersep=5pt,                  
+	showspaces=false,                
+	showstringspaces=false,
+	showtabs=false,                  
+	tabsize=3
+}
+
+\lstset{style=beamer}
+
 
 
 \begin{document}
@@ -170,6 +204,41 @@
 	\end{itemize}
 \end{frame}
 
+\begin{frame}{Turbocodes}
+	\centering
+	
+	\begin{tikzpicture}[auto, thick, >=triangle 45]
+	\draw % Drawing the turbo encoder
+	node at (0, 3) {\inpt}
+	node at (0, 3.3) {\scriptsize $d_k$}
+	node at (0.075, 3) [input] (stream) {}
+	node at (2, 1.5) [input] (mid) {}
+	node at (2, 0) [block] (interleaver) {\scriptsize Entrelaceur}
+	node at (4, 1.5) [rsc] (rsc1) {Enc$_{1}$}
+	node at (4, -1.5) [rsc] (rsc2) {Enc$_{2}$}
+	node at (7, 3) [right] (xk) {$X_k$}
+	node at (7, 1.5) [right] (y1k) {$Y_{1,k}$}
+	node at (7, -1.5) [right] (y2k) {$Y_{2,k}$}
+	;
+	
+	% Drawing the arrows
+	\draw[->] (stream) -| (interleaver);
+	\draw[->] (stream) -- (xk);
+	\draw[->] (rsc1) -- (y1k);
+	\draw[->] (rsc2) -- (y2k);
+	\draw[->] (interleaver) |- (rsc2);
+	\draw[->] (mid) -- (rsc1);
+	\end{tikzpicture}
+\end{frame}
+
+\begin{frame}{Codes LDPC}
+	\begin{itemize}
+		\item Sommes de contrôles
+		\item Multiplication matricielle
+		\item Utilisation de matrices peu denses
+	\end{itemize}
+\end{frame}
+
 \begin{frame}{Plusieurs types de d\'ecodage}
 	\begin{itemize}
 		\item D\'ecodage dur (Hard Decoding)
@@ -192,7 +261,7 @@
 
 \begin{frame}{Choix de l'image}
 	\begin{figure}
-		\includegraphics{base}
+		\includegraphics[scale=0.9]{base}
 	\end{figure}
 \end{frame}
 
@@ -302,41 +371,145 @@
 
 \section{Code Informatique}
 
+\begin{frame}[plain,fragile]{Transformation des images}
+	\begin{lstlisting}[language=Python]
+def image_to_bytes(file_name):
+	cwd = os.getcwd()
+	file_path = os.path.join(cwd, '..', 'files', 'images', file_name) + '.png'
+	image = Image.open(file_path)
+	
+	data = list(image.getdata(band=0))  # The image is in grayscale
+	
+	byte_path = os.path.join(cwd, '..', 'files', 'bytes', file_name) + '.bt'
+	try:
+	byte_file = open(byte_path, 'xb')
+	except FileExistsError:
+	byte_file = open(byte_path, 'wb')
+	
+	for x in data:
+	byte_file.write(x.to_bytes(1, 'big'))
+	
+	byte_file.close()
+	\end{lstlisting}
+\end{frame}
+
+\begin{frame}[plain,fragile]
+	\begin{lstlisting}[language=Python]
+def bytes_to_image(file_name, size):
+	cwd = os.getcwd()
+	byte_path = os.path.join(cwd, '..', 'files', 'bytes', file_name) + '.bt'
+	byte_file = open(byte_path, 'rb')
+	
+	image = Image.frombytes('L', size, byte_file.read(), "raw")
+	file_path = os.path.join(cwd, '..', 'files', 'images', file_name) + '.png'
+	try:
+	file = open(file_path, 'xb')
+	except FileExistsError:
+	file = open(file_path, 'wb')
+	
+	image.save(file)
+	file.close()
+	image.close()	
+	\end{lstlisting}
+\end{frame}
+
+\begin{frame}[plain, fragile]{Rajout de bruit}
+	\begin{lstlisting}[language=C]
+s_list * add_noise(h_list *mes, double s)
+{
+	s_list *res = csl(mes->n, mes->n);
+	for (size_t i = 0; i < res->n; i++)
+	{
+		res->list[i] = (2 * mes->list[i]) - 1 + 
+								box_muller(0, s);
+	}
+	return res;
+}
+	\end{lstlisting}
+\end{frame}
+
+\begin{frame}[plain, fragile]
+	\begin{lstlisting}[language=C]
+//(c) Copyright 1994, Everett F. Carter Jr.
+double box_muller(double m, double s)
+{
+	double x1, x2, w, y1;
+	static double y2;
+	static int use_last = 0;
+	if (use_last)
+	{
+		y1 = y2;
+		use_last = 0;
+	}
+	else
+	{
+		do {
+			x1 = 2.0 * (rand() / (double) RAND_MAX) - 1.0;
+			x2 = 2.0 * (rand() / (double) RAND_MAX) - 1.0;
+			w = x1 * x1 + x2 * x2;
+		} while ( w >= 1.0 );
+		
+		w = sqrt( (-2.0 * log( w ) ) / w );
+		y1 = x1 * w;
+		y2 = x2 * w;
+		use_last = 1;
+	}
+	
+	return( m + y1 * s );
+}
+	\end{lstlisting}
+\end{frame}
+
+\begin{frame}[plain, fragile]{D\'ecodage basique}
+	\begin{lstlisting}[language=C]
+h_list * decode_h_basic(s_list *mes)
+{
+	h_list *res = chl(mes->n, mes->n);
+	for (size_t i = 0; i < mes->n; i++)
+	{
+		res->list[i] = (mes->list[i] > 0);
+	}
+	return res;
+}
+	\end{lstlisting}
+\end{frame}
+
+
+\begin{frame}[plain, fragile]{Cr\'eation d'un code LDPC}
+	\begin{lstlisting}[language=C]
+h_matrix * create_base(size_t n, size_t j, size_t k)
+{
+    size_t m = (n * j) / k;
+    h_matrix *res = chm(m, n);
+    i_list *perm = cil(n, n);
+
+    // Fill the first horizontal part of the matrix
+    for (size_t i = 0; i < n; i++)
+    {
+        shm(res, 1, (i / k), i);
+    }
+
+    // Fill the j-1 other bands
+    for (size_t i = 1; i < j; i++)
+    {
+        permutation(perm);
+        for (size_t x = 0; x < n; x++)
+        {
+            shm(res, 1, ((perm->list[x] + i * n) / k), x);
+        }
+    }
+    return res;
+}
+	\end{lstlisting}
+\end{frame}
 
 \section{Turbocodes}
 
-\subsection{Codage}
-\begin{frame}{Sch\'ema d'un encodeur}
-	\centering
-
-	\begin{tikzpicture}[auto, thick, >=triangle 45]
-		\draw % Drawing the turbo encoder
-		node at (0, 3) {\inpt}
-		node at (0, 3.3) {\scriptsize $d_k$}
-		node at (0.075, 3) [input] (stream) {}
-		node at (2, 1.5) [input] (mid) {}
-		node at (2, 0) [block] (interleaver) {\scriptsize Entrelaceur}
-		node at (4, 1.5) [rsc] (rsc1) {Enc$_{1}$}
-		node at (4, -1.5) [rsc] (rsc2) {Enc$_{2}$}
-		node at (7, 3) [right] (xk) {$X_k$}
-		node at (7, 1.5) [right] (y1k) {$Y_{1,k}$}
-		node at (7, -1.5) [right] (y2k) {$Y_{2,k}$}
-		;
-		
-		% Drawing the arrows
-		\draw[->] (stream) -| (interleaver);
-		\draw[->] (stream) -- (xk);
-		\draw[->] (rsc1) -- (y1k);
-		\draw[->] (rsc2) -- (y2k);
-		\draw[->] (interleaver) |- (rsc2);
-		\draw[->] (mid) -- (rsc1);
-	\end{tikzpicture}
-\end{frame}
 
 \begin{frame}{Composant Enc}
 	\centering
 
-	\begin{tikzpicture}[auto, thick, node distance = 1.5cm, >=triangle 45, scale=0.9]
+	\begin{tikzpicture}[auto, thick, node distance = 1.5cm, >=triangle 45, scale=0.95, every node/.style={transform shape}]
 		\draw % Drawing the RSC component
 		node at (-0.5, 3) {\inpt}
 		node at (-0.5, 3.3) {\scriptsize $d_k$}
@@ -418,16 +591,10 @@
 	\end{itemize}
 \end{frame}
 
-\subsection{Exp\'erience}
-
-
-
-\begin{frame}{Erreurs en fonction du rapport $\frac{E_b}{N_0}$}
-	
-\end{frame}
 
 \section{Codes LDPC}
 \subsection{Fonctionnement}
+
 
 \begin{frame}{Principe math\'ematique}
 	\begin{itemize}
@@ -469,7 +636,9 @@
 	Enfin, $H.c^T = 0$
 \end{frame}
 
+
 \subsection{D\'ecodage}
+
 
 \begin{frame}{Repr\'esentation de Tanner}
 	Un graphe de Tanner est associ\'e \`a la matrice de d\'ecodage H et comprend :
@@ -516,18 +685,7 @@
 		\draw[-] (c3.north) -- (m5);
 		\draw[-] (c3.north) -- (5.3, 1.8);
 	\end{tikzpicture}
-
-
 \end{frame}
-
-\begin{frame}{Plusieurs m\'ethodes}
-	\begin{itemize}
-		\item D\'ecodage brut (Hard decoding)
-		\item D\'ecodage \`a d\'ecision douce (Soft decoding)
-	\end{itemize}
-\end{frame}
-
-\subsection{D\'ecodage brut}
 
 \begin{frame}{Plusieurs m\'ethodes}{D\'ecodage brut}
 	\begin{itemize}
@@ -535,19 +693,6 @@
 		\item Calcul des sommes au niveau des noeuds de contr\^ole
 		\item Modification des noueds messagers reli\'es aux noeuds de contrôles non satisfaits
 		\item It\'eration jus'\`a satisfaction des noeuds de contr\^ole o\`u it\'eration maximale atteinte
-	\end{itemize}
-\end{frame}
-
-
-
-\subsection{D\'ecodage doux}
-
-\begin{frame}{Plusieurs m\'ethodes}{D\'ecodage doux}
-	Utilisation de probabilit\'es,
-	\begin{itemize}
-		\item Envoi des LLR par les noeuds messagers aux noeuds de contr\^ole
-		\item Calcul des nouveaux LLR
-		\item It\'eration jus'\`a des LLR suffisament \'elev\'es o\`u it\'eration maximale atteinte
 	\end{itemize}
 \end{frame}
 
