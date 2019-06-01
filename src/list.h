@@ -70,6 +70,7 @@ void aet_all_s_list(s_list *list_s, double x);
 char is_all_nil(h_list *list_h);
 
 double min_s(s_list *list_s);
+double max_s(s_list *list_s);
 
 int append_i(i_list *list_i, int x);
 int shift_i(i_list *list_i, int l);

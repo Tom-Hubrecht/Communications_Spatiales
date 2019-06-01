@@ -1,9 +1,5 @@
-# Only include images and .tex files
-*.aux
-*.log
-*.nav
-*.out
-*.pdf
-*.snm
-*.synctex.gz
-*.toc
+# Only include images, .bib and .tex files
+*.*
+!*.tex
+!*.bib
+!Images/*

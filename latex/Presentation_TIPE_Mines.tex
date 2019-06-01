@@ -1,19 +1,27 @@
 \documentclass[11pt]{beamer}
+
+\author{Tom Hubrecht}
+\title{Transmission d'informations entre la Terre et les sondes spatiales}
+\date{269}
+
 \usefonttheme[onlymath]{serif}
+
 \usepackage[utf8]{inputenc}
 \usepackage{appendixnumberbeamer}
 \usepackage{listings}
 \usepackage{color}
-\usepackage{textcomp}
 \usepackage{lmodern}
 \usepackage{ragged2e}
-\usetheme{Frankfurt}
 \usepackage{graphicx}
 \usepackage{tikz}
-\usetikzlibrary{shapes,arrows}
 \usepackage{amsmath}
-\author{Tom Hubrecht}
+\usepackage[backend=biber, style=numeric, citestyle=verbose]{biblatex}
+
 \graphicspath{{./Images/}}
+
+\usetikzlibrary{shapes,arrows}
+
+\usetheme{Frankfurt}
 
 %% Beamer Options %%
 \setbeamertemplate{navigation symbols}{}
@@ -51,10 +59,6 @@
 \AtBeginSubsection{\frame[plain, noframenumbering]{\subsectionpage}}
 
 
-%% Create a font to use in the listings %%
-%\newfontfamily\listingsfont[Scale=0.85]{droidsansmono.ttf}
-
-
 %% Define colors for the listings %%
 \definecolor{cred}{RGB}{255, 85, 85}
 \definecolor{cgreen}{RGB}{85, 255, 85}
@@ -87,6 +91,10 @@
 
 
 
+%% Include the bibliography %%
+\addbibresource{./Bibliography.bib}
+
+
 \begin{document}
 % Definition of blocks:
 \tikzset{%
@@ -104,10 +112,7 @@
 \newcommand{\derv}{\huge$\frac{d}{dt}$}
 \newcommand{\inpt}{$\boldsymbol{\circ}$}
 
-\title{Transmission d'informations entre la Terre et les sondes spatiales}
-\date[]{269}
 
-	
 \begin{frame}[plain]
 	\maketitle
 \end{frame}
@@ -124,14 +129,14 @@
 \begin{frame}{Exploration spatiale}
 	\centering
 	\includegraphics[scale=0.4]{VoyagerReverse}\\
-	La sonde Voyager 2 communique avec le Terre alors qu'elle se trouve \`a 18 milliards de kilom\`etres.
+	La sonde Voyager 2 communique avec la Terre alors qu'elle se trouve \`a 18 milliards de kilom\`etres.
 \end{frame}
 
 
 \subsection{Mod\'elisation}
 
 
-\begin{frame}{Th\'eorie de l'information}
+\begin{frame}{Th\'eorie de l'information (C. Shannon)}
 	\begin{tikzpicture}[auto, thick, node distance=2.5cm, >=triangle 45]
 		\draw % Drawing the diagram of a communication system :
 		node at (0, 0.9) {\small $Source$}
@@ -185,7 +190,7 @@
 \begin{frame}{D\'efinitions}
 	\begin{itemize}
 		\item Taux de transmission : $R = \frac{\text{nombre de bits du message}}{\text{nombre de bits envoy\'es}}$
-		\item Probabilit\'e \`a posteriori (PAP)
+		\item Probabilit\'e a posteriori (PAP)
 		\item Rapport de vraisemblance logarithmique (LLR) : $\Lambda(d_k) = \log(\frac{\mathbf{P}(d_k = 1)}{\mathbf{P}(d_k = 0)})$
 		%\item Codage syst\'ematique
 	\end{itemize}
@@ -233,7 +238,7 @@
 
 \begin{frame}{Codes LDPC}
 	\begin{itemize}
-		\item Sommes de contrôles
+		\item Sommes de contrôle
 		\item Multiplication matricielle
 		\item Utilisation de matrices peu denses
 	\end{itemize}
@@ -261,7 +266,8 @@
 
 \begin{frame}{Choix de l'image}
 	\begin{figure}
-		\includegraphics[scale=0.9]{base}
+		\includegraphics[scale=0.8]{base}
+		\caption{Juno (https://xkcd.com/1703)}
 	\end{figure}
 \end{frame}
 
@@ -288,24 +294,24 @@
 \subsection{Bruit faible}
 
 
-\begin{frame}{Turbocodes, $\frac{E_b}{N_0} = 1.5$ dB}
+\begin{frame}{Turbocodes, $10.\log(\frac{E_b}{N_0}) = 2.2$ dB}
 	\begin{columns}
 		\begin{column}{.5\textwidth}
 			\begin{figure}
-				\includegraphics[scale=0.6]{turbo_noisy_70}\\
+				\includegraphics[scale=0.6]{turbo_noisy_60}\\
 				Avant d\'ecodage
 			\end{figure}
 		\end{column}
 		\begin{column}{.5\textwidth}
 			\begin{figure}
-				\includegraphics[scale=0.6]{turbo_decoded_70}\\
+				\includegraphics[scale=0.6]{turbo_decoded_60}\\
 				Apr\`es d\'ecodage
 			\end{figure}
 		\end{column}
 	\end{columns}
 \end{frame}
 
-\begin{frame}{Codes LDPC, $\frac{E_b}{N_0} = 2.2$ dB}
+\begin{frame}{Codes LDPC, $10.\log(\frac{E_b}{N_0}) = 2.2$ dB}
 	\begin{columns}
 		\begin{column}{.5\textwidth}
 			\begin{figure}
@@ -326,7 +332,24 @@
 \subsection{Bruit \'elev\'e}
 
 
-\begin{frame}{Turbocodes, $\frac{E_b}{N_0} = 0.13$ dB}
+\begin{frame}{Turbocodes, $10.\log(\frac{E_b}{N_0}) = 0.97$ dB}
+	\begin{columns}
+		\begin{column}{.5\textwidth}
+			\begin{figure}
+				\includegraphics[scale=0.6]{turbo_noisy_80}\\
+				Avant d\'ecodage
+			\end{figure}
+		\end{column}
+		\begin{column}{.5\textwidth}
+			\begin{figure}
+				\includegraphics[scale=0.6]{turbo_decoded_80}\\
+				Apr\`es d\'ecodage
+			\end{figure}
+		\end{column}
+	\end{columns}
+\end{frame}
+
+\begin{frame}{Turbocodes, $10.\log(\frac{E_b}{N_0}) = 0.13$ dB}
 	\begin{columns}
 		\begin{column}{.5\textwidth}
 			\begin{figure}
@@ -343,7 +366,7 @@
 	\end{columns}
 \end{frame}
 
-\begin{frame}{Codes LDPC, $\frac{E_b}{N_0} = 0.97$ dB}
+\begin{frame}{Codes LDPC, $10.\log(\frac{E_b}{N_0}) = 0.97$ dB}
 	\begin{columns}
 		\begin{column}{.5\textwidth}
 			\begin{figure}
@@ -368,8 +391,16 @@
 \appendix
 
 
+\section{Bibliographie}
+
+
+\begin{frame}[plain]
+	\printbibliography[title={Bibliographie}]
+\end{frame}
+
 
 \section{Code Informatique}
+
 
 \begin{frame}[plain,fragile]{Transformation des images}
 	\begin{lstlisting}[language=Python]
@@ -448,7 +479,6 @@ double box_muller(double m, double s)
 			x2 = 2.0 * (rand() / (double) RAND_MAX) - 1.0;
 			w = x1 * x1 + x2 * x2;
 		} while ( w >= 1.0 );
-		
 		w = sqrt( (-2.0 * log( w ) ) / w );
 		y1 = x1 * w;
 		y2 = x2 * w;
@@ -509,7 +539,7 @@ h_matrix * create_base(size_t n, size_t j, size_t k)
 \begin{frame}{Composant Enc}
 	\centering
 
-	\begin{tikzpicture}[auto, thick, node distance = 1.5cm, >=triangle 45, scale=0.95, every node/.style={transform shape}]
+	\begin{tikzpicture}[auto, thick, node distance = 1.5cm, >=triangle 45, scale=0.95, transform shape]
 		\draw % Drawing the RSC component
 		node at (-0.5, 3) {\inpt}
 		node at (-0.5, 3.3) {\scriptsize $d_k$}
@@ -575,7 +605,7 @@ h_matrix * create_base(size_t n, size_t j, size_t k)
 	On introduit des fonctions :
 	\begin{itemize}
 		\item $\alpha_k^i(m) = \dfrac{\mathbf{P}(X_k = i, S_k = m, R_1^k)}{\mathbf{P}(R_1^k)}.\mathbf{P}(X_k = i, S_k = m / R_1^k)$
-		\item $\beta_k(m) = \dfrac{\mathbf{P}(R_{k+1}^N / S_k = m)}{\mathbf{P}(R_(k+1)^N / R_1^k)}$
+		\item $\beta_k(m) = \dfrac{\mathbf{P}(R_{k+1}^N / S_k = m)}{\mathbf{P}(R_{k+1}^N / R_1^k)}$
 		\item $\gamma_i(R_k, m', m) = \mathbf{P}(X_k = i, R_k, S_k = m/ S_{k-1} = m')$
 	\end{itemize}
 	On a par le calcul : $\lambda_k^i(m) = \alpha_k^i(m).\beta_k(m)$

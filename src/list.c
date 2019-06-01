@@ -215,6 +215,22 @@ double min_s(s_list *list_s)
 }
 
 
+double max_s(s_list *list_s)
+{
+    double s = 0;
+
+    for (size_t i = 0; i < list_s->n; i++)
+    {
+        if (fabs(list_s->list[i]) > s)
+        {
+            s = fabs(list_s->list[i]);
+        }
+    }
+
+    return s;
+}
+
+
 int append_i(i_list *list_i, int x)
 {
     if (list_i->n == list_i->m_s)

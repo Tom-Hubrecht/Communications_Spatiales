@@ -392,3 +392,9 @@ int demo_ldpc_proba(char *file_name, double s, size_t i_max)
 
     return 0;
 }
+
+
+int demo_turbo_graph()
+{
+
+}

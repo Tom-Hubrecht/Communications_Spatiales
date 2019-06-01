@@ -1,0 +1,115 @@
+\documentclass{article}
+ 
+ \author{Tom Hubrecht}
+ 
+\usepackage[latin1]{inputenc}
+\usepackage[left=2cm, right=2cm, top=1cm, bottom=2cm]{geometry}
+\usepackage{listings}
+\usepackage{color}
+
+
+%% Define colors for the listings %%
+\definecolor{cred}{RGB}{255, 85, 85}
+\definecolor{cgreen}{RGB}{85, 255, 85}
+\definecolor{cblue}{RGB}{85, 85, 255}
+\definecolor{cblack}{RGB}{0, 0, 0}
+\definecolor{cwhite}{RGB}{255, 255, 255}
+
+
+%% Listing Options %%
+\lstdefinestyle{listing}{
+	backgroundcolor=\color{cwhite},   
+	commentstyle=\color{cblack},
+	keywordstyle=\color{cblack}\bfseries,
+	numberstyle=\tiny\color{cblack},
+	stringstyle=\color{cblack},
+	basicstyle=\ttfamily\small,
+	breakatwhitespace=false,         
+	breaklines=true,                 
+	captionpos=b,                    
+	keepspaces=true,                 
+	numbers=left,                    
+	numbersep=5pt,                  
+	showspaces=false,                
+	showstringspaces=false,
+	showtabs=false,                  
+	tabsize=4
+}
+
+\lstset{style=listing}
+\lstset{language=C}
+
+\begin{document}
+
+\tableofcontents
+\newpage
+
+
+\section{Source files}
+
+
+\subsection{codage.c}
+\lstinputlisting{../src/codage.c}
+\newpage
+
+\subsection{image.py}
+\lstinputlisting{../src/image.py}
+\newpage
+
+\subsection{basic.c}
+\lstinputlisting{../src/basic.c}
+\newpage
+
+\subsection{list.c}
+\lstinputlisting{../src/list.c}
+\newpage
+
+\subsection{random.c}
+\lstinputlisting{../src/random.c}
+\newpage
+
+\subsection{turbocode.c}
+\lstinputlisting{../src/turbocode.c}
+\newpage
+
+\subsection{ldpc.c}
+\lstinputlisting{../src/ldpc.c}
+\newpage
+
+\subsection{demo.c}
+\lstinputlisting{../src/demo.c}
+\newpage
+
+\subsection{boxmuller.c}
+\lstinputlisting{../src/boxmuller.c}
+\newpage
+
+
+\section{Header files}
+
+
+\subsection{basic.h}
+\lstinputlisting{../src/basic.h}
+\newpage
+
+\subsection{list.h}
+\lstinputlisting{../src/list.h}
+\newpage
+
+\subsection{random.h}
+\lstinputlisting{../src/random.h}
+\newpage
+
+\subsection{turbocode.h}
+\lstinputlisting{../src/turbocode.h}
+\newpage
+
+\subsection{ldpc.h}
+\lstinputlisting{../src/ldpc.h}
+\newpage
+
+\subsection{demo.h}
+\lstinputlisting{../src/demo.h}
+\newpage
+
+\end{document}
