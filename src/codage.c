@@ -48,6 +48,11 @@ int main(int argc, char *argv[])
     {
         demo_ldpc_proba(file, s, 10);
     }
+    if (demos & 8)
+    {
+        demo_turbo_graph(20, s);
+    }
+
 
     return 0;
 }

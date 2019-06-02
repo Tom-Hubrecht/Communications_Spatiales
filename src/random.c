@@ -9,6 +9,17 @@
 #include "random.h"
 #include "list.h"
 
+
+// Fills the h_list with random 0 and 1 with uniform proba p
+void random_h(h_list *list_h, double p)
+{
+    for (size_t i = 0; i < list_h->n; i++)
+    {
+        list_h->list[i] = (rand() / (double) RAND_MAX) < p;
+    }
+}
+
+
 // Returns a permutation of 0..n-1 using the Fisher-Yates shuffle
 void permutation(i_list *list_i)
 {

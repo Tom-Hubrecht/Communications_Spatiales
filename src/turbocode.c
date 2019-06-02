@@ -508,7 +508,7 @@ h_list * decode_turbo_basic(s_list *buf, double s)
 // Executes at most i_max passes through both decoders on the stream
 h_list * decode_turbo_iter(s_list *buf, double s, size_t i_max)
 {
-    char debug = 1;
+    char debug = 0;
 
     char done = 0;
     char interleaved = 0;

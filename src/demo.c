@@ -394,7 +394,51 @@ int demo_ldpc_proba(char *file_name, double s, size_t i_max)
 }
 
 
-int demo_turbo_graph()
+int demo_turbo_graph(size_t nb_iter, double p)
 {
+    char debug = 0;
 
+    char path[1024];
+
+    getcwd(path, 1024);
+    strcat(path, "/../files/graph/turbo.grp");
+
+    FILE *fp = fopen(path, "w");
+
+    double noise[12] = {2, 1, 0.9, 0.8, 0.7, 0.6, 0.5,
+                                0.4, 0.3, 0.2, 0.1, 0.05};
+    double s;
+    size_t nb_err;
+
+    h_list *mes = chl(8920, 8920);
+    random_h(mes, p);
+
+    h_list *enc = encode_turbo(mes);
+
+    for (size_t i = 0; i < 12; i++)
+    {
+        nb_err = 0;
+        s = pow(10, -0.1*noise[i]);
+
+        for (size_t k = 0; k < nb_iter; k++)
+        {
+            s_list *sig = add_noise(enc, s);
+            h_list *res = decode_turbo_iter(sig, s, 20);
+            res->n = 8920;
+
+            nb_err += nb_errors(res, mes);
+
+            free_s_list(sig);
+            free_h_list(res);
+        }
+        printf("%f -- %d / %d\n", s, nb_err, 8920*nb_iter);
+
+
+
+    }
+
+
+    fclose(fp);
+
+    free_h_list(mes);
 }

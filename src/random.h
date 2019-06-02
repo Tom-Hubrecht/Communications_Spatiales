@@ -15,6 +15,7 @@
 
 typedef bar generator;
 
+void random_h(h_list *list_h, double p);
 
 void permutation(i_list *list_i);
 double box_muller(double m, double s);

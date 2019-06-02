@@ -7,6 +7,13 @@
 \usefonttheme[onlymath]{serif}
 
 \usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+
+\usepackage{csquotes}
+\usepackage[backend=biber, style=numeric, citestyle=verbose, sorting=nyt]{biblatex}
+\usepackage[french]{babel}
+\usepackage{hyperref}
+
 \usepackage{appendixnumberbeamer}
 \usepackage{listings}
 \usepackage{color}
@@ -15,7 +22,6 @@
 \usepackage{graphicx}
 \usepackage{tikz}
 \usepackage{amsmath}
-\usepackage[backend=biber, style=numeric, citestyle=verbose]{biblatex}
 
 \graphicspath{{./Images/}}
 
@@ -25,6 +31,7 @@
 
 %% Beamer Options %%
 \setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{bibliography item}{}
 
 \setbeamertemplate{footline}
 {
@@ -42,14 +49,14 @@
 
 \setbeamertemplate{section page}
 {
-	\begin{beamercolorbox}[sep=12pt,center]{part title}
+	\begin{beamercolorbox}[sep=12pt,center]{section title}
 		\usebeamerfont{section title}\insertsection\par
 	\end{beamercolorbox}
 }
 
 \setbeamertemplate{subsection page}
 {
-	\begin{beamercolorbox}[sep=10pt,left]{part title}
+	\begin{beamercolorbox}[sep=10pt,left]{subsection title}
 		\usebeamerfont{subsection title}\insertsubsection\par
 	\end{beamercolorbox}
 }
@@ -90,9 +97,8 @@
 \lstset{style=beamer}
 
 
-
 %% Include the bibliography %%
-\addbibresource{./Bibliography.bib}
+\addbibresource{Bibliography.bib}
 
 
 \begin{document}
@@ -267,7 +273,7 @@
 \begin{frame}{Choix de l'image}
 	\begin{figure}
 		\includegraphics[scale=0.8]{base}
-		\caption{Juno (https://xkcd.com/1703)}
+		\caption{Juno, XKCD}
 	\end{figure}
 \end{frame}
 
@@ -391,11 +397,19 @@
 \appendix
 
 
+
 \section{Bibliographie}
 
-
 \begin{frame}[plain]
-	\printbibliography[title={Bibliographie}]
+	\footnotesize
+	\begin{itemize}
+		\item[-] \cite{voyager}
+		\item[-] \cite{shannon}
+		\item[-] \cite{gallager}
+		\item[-] \cite{turbocodes}
+		\item[-] \cite{ccsds}
+		\item[-] \cite{juno}
+	\end{itemize}
 \end{frame}
 
 
