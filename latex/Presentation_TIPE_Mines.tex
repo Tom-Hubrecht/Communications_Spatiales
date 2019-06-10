@@ -251,10 +251,10 @@
 
 \begin{frame}{D\'ecodage d'un message cod\'e \`a l'aide de turbocodes}
 Soit $R_1^N$ le message re\c{c}u, $S_k$ l'\'etat de codeur apr\`es lecture du bit $X_k$\\
-$\forall k \in \{1, N\}$ on calcule $\Lambda(x_k)$ \`a l'aide de $\alpha_k^i(m) = \dfrac{\mathbf{P}(X_k = i, S_k = m, R_1^k)}{\mathbf{P}(R_1^k)}.\mathbf{P}(X_k = i, S_k = m / R_1^k)$ et\\
-$\beta_k(m) = \dfrac{\mathbf{P}(R_{k+1}^N / S_k = m)}{\mathbf{P}(R_{k+1}^N / R_1^k)}$\\
-on obtient alors $\mathbf{P}(x_k = 1 | R_1^N)$ et $\mathbf{P}(x_k = 0 | R_1^N)$ d'o\`u $\Lambda(x_k)$\\
-car $\mathbf{P}(x_k = i | R_1^N) = \sum\limits_m\alpha_k^i(m).\beta_k(m)$
+$\forall k \in \{1, N\}$ on calcule $\Lambda(x_k)$ \`a l'aide de $\alpha_k^i(m)=\dfrac{\mathbf{P}(X_k=i,S_k=m,R_1^k)}{\mathbf{P}(R_1^k)}\mathbf{P}(X_k=i,S_k=m|R_1^k)$ et\\
+$\beta_k(m)=\dfrac{\mathbf{P}(R_{k+1}^N|S_k=m)}{\mathbf{P}(R_{k+1}^N|R_1^k)}$\\
+on obtient alors $\mathbf{P}(x_k=1|R_1^N)$ et $\mathbf{P}(x_k=0|R_1^N)$ d'o\`u $\Lambda(x_k)$\\
+car $\mathbf{P}(x_k=i|R_1^N)=\sum\limits_m\alpha_k^i(m)\beta_k(m)$
 \end{frame}
 
 \begin{frame}{Codes LDPC}
@@ -391,6 +391,100 @@ car $\mathbf{P}(x_k = i | R_1^N) = \sum\limits_m\alpha_k^i(m).\beta_k(m)$
 
 \section{Code Informatique}
 
+
+\begin{frame}[plain, fragile]{Codage d'un turbocode}
+	\begin{lstlisting}[language=C]
+h_list * encode_turbo(h_list *buf)
+{
+	h_list *buf_e = chl(3 * (buf->n + 4), 3 * (buf->n + 4));
+	bar *registerA = initMemState(4);
+	bar *registerB = initMemState(4);
+	char a;
+	char b;
+	char d;
+	for(size_t i = 0; i < buf->n; i++)
+	{
+		d = buf->list[i];
+		buf_e->list[3 * i] = d;
+		a = yieldEncode(d, registerA);
+		buf_e->list[3 * i + 1] = a;
+		d = buf->list[pi(i)];
+		b = yieldEncode(d, registerB);
+		buf_e->list[3 * i + 2] = b;
+	}
+	// Clean the registers
+	for(size_t i = buf->n; i < (buf->n + 4); i++)
+	{
+		d = barget(registerA, 3) ^ barget(registerA, 2);
+		buf_e->list[3 * i] = d;
+		a = yieldEncode(d, registerA);
+		buf_e->list[3 * i + 1] = a;
+		d = barget(registerB, 3) ^ barget(registerB, 2);
+		b = yieldEncode(d, registerB);
+		buf_e->list[3 * i + 2] = b;
+	}
+	bardestroy(registerA);
+	bardestroy(registerB);
+	return buf_e;
+}
+	\end{lstlisting}
+\end{frame}
+
+\begin{frame}[plain, fragile]
+	\begin{lstlisting}[language=C]
+char yieldEncode(char d, bar *m)
+{
+	char a = d ^ barget(m, 0) ^ barget(m, 2) ^ barget(m, 3);
+	char g = d ^ barget(m, 2) ^ barget(m, 3);
+	
+	barshl(m, 1, g);
+	
+	return a;
+}
+	\end{lstlisting}
+\end{frame}
+
+\begin{frame}[plain, fragile]
+	\begin{lstlisting}[language=C]
+h_list * decode_turbo_iter(s_list *buf, double s, size_t i_max)
+{
+	char done = 0;
+	char interleaved = 0;
+	size_t iter = 0;	
+	double Mm[2];
+	size_t n = buf->n / 3;
+	s_list *llr = csl(n, n);    // The 0-th bit is not considered
+	s_list *X1 = csl(n, n);
+	s_list *X2 = csl(n, buf->n);
+	s_list *Y1 = csl(n, n);
+	s_list *Y2 = csl(n, n);
+	double t;
+	int k;
+	split_s(buf, X1, Y1, Y2);
+	while (!done && iter < i_max)
+	{
+		iter ++;
+		interleaved = 0;
+		k = decode_part(X1, Y1, llr, s);
+		substract_s(llr, X1);
+		max_min(Mm, llr);
+		if (Mm[0] > -5000000 || Mm[1] < 5000000)
+		{
+			interleaved = 1;
+			// We need to interleave the llr to match the pattern of Y2
+			interleave(X2, llr);
+			k = decode_part(X2, Y2, llr, s);
+			substract_s(llr, X2);
+			// Update X1 with the new values
+			deinterleave(X1, llr);}
+		if (Mm[0] < -5000000 && Mm[1] > 5000000)
+		{
+			done = 1;}}
+	h_list *res = recreate(llr, interleaved);
+	return res;
+}
+	\end{lstlisting}
+\end{frame}
 
 \begin{frame}[plain, fragile]{Initialisation}
 	\begin{lstlisting}[language=C]
@@ -678,7 +772,12 @@ int decode_ldpc_a_basic(a_matrix *mat, h_list *mes, size_t nb_max)
 \end{frame}
 
 \begin{frame}
-	
+	$\gamma_i(R_k,m,m')=\mathbf{P}(X_k=i,(x_k,y_k),S_k=m|S_{k-1}=m')$\\
+	$=\mathbf{P}(x_k,y_k|X_k=i,S_k=m,S_{k-1}=m')$\\
+	$\qquad\mathbf{P}(X_k=i|S_k=m,S_{k-1}=m')\mathbf{P}(S_k=m|S_{k-1}=m')$ or,\\
+	$\mathbf{P}(X_k=i|S_k=m,S_{k-1}=m') \in \{0,1\}$ et\\
+	$\mathbf{P}(x_k,y_k|X_k=i,S_k=m,S_{k-1}=m')=\mathbf{P}(x_k|X_k=i)\mathbf{P}(y_k|Y_k=j)$, enfin,\\
+	$\mathbf{P}(S_k=m|S_{k-1}=m')=\frac{1}{2}$
 \end{frame}
 
 \begin{frame}{Algorithme de calcul}

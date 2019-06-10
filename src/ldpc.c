@@ -90,7 +90,6 @@ int decode_ldpc_a_basic(a_matrix *mat, h_list *mes, size_t nb_max)
 
     char correct = is_all_nil(verif);
 
-
     while (!correct && (iter < nb_max))
     {
         set_all_i_list(count, 0);

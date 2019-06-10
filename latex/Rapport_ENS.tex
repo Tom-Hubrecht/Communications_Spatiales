@@ -9,9 +9,9 @@
 \usepackage{lmodern}
 \usepackage{graphicx}
 \usepackage{tikz}
+\usepackage{float}
 
-\usepackage{amsmath}
-\usepackage{amsmath}
+\usepackage[fleqn]{amsmath}
 \usepackage{amssymb}
 
 \usepackage{csquotes}
@@ -41,8 +41,8 @@
 
 
 \begin{document}
-
 \maketitle
+
 
 \section{Introduction}
 L'exploration spatiale est un domaine majeur et actuel de la recherche scientifique, les sondes envoyées ne pouvant souvent pas revenir sur Terre, il est crucial de recevoir les informations récoltées, ce qui me semble être un des aspects les plus intéressants de ce domaine. Les liaisons entre les sondes spatiales et la Terre établissent le transport d'instructions de la Terre vers la sonde ainsi que la transmission en retour des données obtenues par la sonde.
@@ -53,10 +53,7 @@ La r\'eception correcte des informations transmises par une sonde spatiale est c
 
 
 \section{Mod\'elisation d'une transmission dans l'espace}
-Le processus de la transmission d'information a \'et\'e mod\'elis\'ee par C. Shannon et prend la forme suivante.
-\ref{fig:shannon}
-
-
+Le processus de la transmission d'information a \'et\'e mod\'elis\'ee par C. Shannon et prend la forme de la Figure-\ref{fig:shannon}
 Dans le cas d'une transmission Sonde-Terre, la source mod\'elise les instruments de mesure et l'\'emetteur repr\'esente le circuit \'emetteur de la sonde. Le r\'ecepteur est une parabole sur la Terre par exemple. Le canal de transmission est le vide de l'espace, on consid\`ere en effet qu'aucun obstacle ne perturbe le signal envoy\'e par la sonde. Ainsi, la source de bruit perturbant le signal produit un bruit blanc additif, ce qui donne un canal de propagation gaussien.
 
 
@@ -73,10 +70,8 @@ Invent\'es par l'\'equipe de C. Berrou vers 1993, les Turbocodes utilisent deux 
 
 
 \subsubsection{Codage d'un message}
-
 Le message \`a envoyer est la suite de bool\'eens $(d_k)_{k \in [\![1, N]\!]}$, le codage retourne trois suites de bool\'eens\ref{fig:turbo}, $(X_k)_{k \in [\![1, N]\!]}$, $(Y_{1,k})_{k \in [\![1, N]\!]}$ et $(Y_{2,k})_{k \in [\![1, N]\!]}$ avec $\forall k \in [\![1, N]\!], X_k = d_k$.\\
-Les composants Enc sur la figure sont des codeurs convolutifs de la forme suivante : \ref{fig:enc}
-
+Les composants Enc sur la figure sont des codeurs convolutifs de la forme Figure-\ref{fig:enc}
 L'\'etat interne $(M_1, M_2, M_3, M_4)$ du codeur peut \^etre repr\'esent\'e par un entier $S \in [\![0, 15]\!]$, l'entier $K = 4$ est le nombre de cases m\'emoires du composant codeur.
 
 
@@ -90,8 +85,8 @@ Le signal re\c{c}u est ensuite compos\'ee de trois suites de variables r\'eelles
 o\`u $a_k, b_k$ et $c_k$ sont des variables al\'eatoires suivant une loi normale de moyenne nulle et de variance $\sigma^2$.\\
 On pose $R_k = (x_k,y_{j,k}), j \in \{1, 2\}$, ce sont les couples $R_k$ qui seront introduits dans le d\'ecodeur. On note de plus $R_i^j = (R_k)_{k \in [\![i, j]\!]}$\\
 Le d\'ecodage du signal re\c{c}u vise \`a calculer pour chaque bit $d_k$ du message, $\Lambda(d_k) = \log\left(\dfrac{\mathbf{P}(d_k = 1)}{\mathbf{P}(d_k = 0)}\right)$. Pour ce faire, on introduit les quantit\'es $\lambda_k^i(m) = \mathbf{P}(X_k = i, S_k = m / R_1^N)$,\\
-on a ainsi $\mathbf{P}(X_k = i) = \sum\limits_{m=0}^{15} \lambda_k^i(m)$.\\
-
+on a ainsi $\mathbf{P}(X_k = i) = \sum\limits_{m=0}^{15} \lambda_k^i(m)$. Pour calculer $\lambda_k^i(m)$, on consid\`ere \\
+$\alpha_k^i(m)=\dfrac{\mathbf{P}(X_k=i,S_k=m,R_1^k)}{\mathbf{P}(R_1^k)}\mathbf{P}(X_k=i,S_k=m|R_1^k)$ et $\beta_k(m)=\dfrac{\mathbf{P}(R_{k+1}^N|S_k=m)}{\mathbf{P}(R_{k+1}^N|R_1^k)}$ puisque $\lambda_k^i(m)=\alpha_k^i(m)\beta_k(m)$\ref{eq:1}, on peut alors calculer r\'ecursivement les quantit\'es $\alpha_k^i(m)$ et $\beta_k(m)$\ref{eq:2} et retrouver ainsi $\mathbf{P}(X_k = i)$
 
 
 \subsection{Codes LDPC}
@@ -147,37 +142,50 @@ typedef struct a_matrix {
 } a_matrix ;
 \end{verbatim}
 \normalsize
-Le codage d'un message est une simple multiplication matricielle entre la matrice $G$ et le message $m$, le d\'ecodage du signal re\c{c}u se fait en deux \'etapes, tout d'abord on passe le signal re\c{c}u \`a travers la fonction seuil $\mathbf{1}_{x>0}$, ensuite on calcule le nombre de contr\^oles non v\'erifi\'es par chaque bit du message r\'eceptionn\'e. On change alors la valeur de chaque bit impliqu\'e dans le nombre maximal de contr\^oles non v\'erifi\'es et on recalcule les sommes de contr\^oles. Ce processus est r\'ep\'et\'e jusqu'\`a ce que l'on ait $Hc^T=0$ ou bien que le nombre d'it\'erations maximal soit d\'epass\'e, on renvoie ensuite le message d\'ecod\'e.
+Le codage d'un message est une simple multiplication matricielle entre la matrice $G$ et le message $m$, le d\'ecodage du signal re\c{c}u se fait en deux \'etapes, tout d'abord on passe le signal re\c{c}u \`a travers la fonction seuil $\mathbf{1}_{x>0}$, ensuite on calcule le nombre de contr\^oles non v\'erifi\'es par chaque bit du message r\'eceptionn\'e. On change alors la valeur de chaque bit impliqu\'e dans le nombre maximal de contr\^oles non v\'erifi\'es et on recalcule les sommes de contr\^oles. Ce processus est r\'ep\'et\'e jusqu'\`a ce que l'on ait $Hc^T=0$ ou bien que le nombre d'it\'erations maximal $k_{max}$ soit d\'epass\'e, on renvoie ensuite le message d\'ecod\'e.
+
 
 \subsection{Taux d'erreur}
-Pour un SNR \'elev\'e, les deux types de codes parviennent \`a retouver parfaitement l'image d'origine\ref{fig:faible}, cependant, lorsque le bruit est plus important, le d\'ecodage plus simple des codes LDPC impl\'ement\'e ne parvient plus \`a d\'ecoder le signal re\c{c}u\ref{fig:eleve}. En fin de compte, j'ai \'egalement trac\'e le taux d'erreur en fonction du SNR, ce qui montre la sup\'eriorit\'e de l'impl\'ementation des turbocodes.\ref{fig:taux}
+Pour un SNR \'elev\'e, les deux types de codes parviennent \`a retouver parfaitement l'image d'origine (Figure-\ref{fig:faible}), cependant, lorsque le bruit est plus important, le d\'ecodage plus simple des codes LDPC impl\'ement\'e ne parvient plus \`a d\'ecoder le signal re\c{c}u (Figure-\ref{fig:eleve}). En fin de compte, j'ai \'egalement trac\'e le taux d'erreur en fonction du SNR, ce qui montre la sup\'eriorit\'e de l'impl\'ementation des turbocodes. (Figure-\ref{fig:taux})
+
 
 \section{Calcul de complexit\'es}
-La question de la complexit\'e temporelle du d\'ecodage du signal re\c{c}u est importante pour permettre une am\'elioration du d\'ebit de transmission, tandis que la complexit\'e spatiale sert dans l'optique d'une correction du signal par une sonde.
-
+La question de la complexit\'e du d\'ecodage du signal re\c{c}u est importante pour am\'eliorer le d\'ebit de transmission ainsi que de permettre un d\'ecodage dans un syst\`eme
+embarqu\'e.
 
 \subsection{D\'ecodage d'un Turbocode}
 \subsubsection{Complexit\'e temporelle}
 Lors du d\'ecodage, on fournit un entier $i_{max}$ repr\'esentant le nombre maximum de passages pour le calcul des $\Lambda(X_k)$. On effectue lors de chaque passage au plus deux calculs cons\'ecutifs des rapports de vraisemblance logarithmique.\\
 Lors d'un calcul des $\Lambda(X_k)$, on it\`ere deux fois sur le signal $R_1^N$, pour le calcul des quantit\'es $\alpha_k^i(m)$ et $\gamma_i(R_k, m', m)$ d'une part et celui des quantit\'es $\beta_k(m)$ et $\lambda_k^i(m)$ d'autre part.\\
 Pour $m \in [\![0, 15]\!]$, on a uniquement deux $m' \in [\![0, 15]\!]$ tels que $\gamma_i(R_k, m', m) \neq 0$, puisque si $S_k = m$, $S_{k-1} = m / 2 + (m$ \& $8)$ \^{} $8*(i$ \^{} $(m$ \& $1))$, $i \in \{0, 1\}$, avec \& l'op\'eration AND, et \^{} l'op\'eration XOR appliqu\'ees bit \`a bit sur des entiers.\\
-Le calcul des $\gamma_i(R_k, m', m)$ fait appel \`a la fonction \verb|p_transition(x, d, s)| qui s'effectue en temps constant.\\
-De plus, le cal
+Le calcul de chaque $\gamma_i(R_k, m', m)$ se fait en temps constant, on it\`ere sur $m\in[\![0, 2^K-1]\!]$ pour le calcul des $\alpha_k^i(m)$ et $\beta_k(m)$.
 Ainsi, la complexit\'e d'un calculs des rapports de vraisemblance logarithmique a un co\^ut de $\mathcal{O}(2^KN)$ et le d\'ecodage total un co\^ut de $\mathcal{O}(2^KNi_{max})$
 
 
 \subsubsection{Complexit\'e spatiale}
-On a besoin de cr\'eer de multiples tableaux pour la programmation dynamique pour stocker l'ensemble des valeurs $(x_k)_{k \in [\![1, N]\!]}$, $(y_{1,k})_{k \in [\![1, N]\!]}$, $(y_{2,k})_{k \in [\![1, N]\!]}$, $\Lambda(X_k)$, $\lambda_k^i(m)$, $\alpha_k^i(m)$, $\beta_k(m)$ et $\gamma_i(R_k, m', m)$. Ainsi, en prenant $t$ la taille de la repr\'esentation d'un nombre flottant en m\'emoire, la taille de la m\'emoire n\'ecessaire pour stocker le signal est \'egale \`a $\mathcal{O}(tN)$, de m\^eme pour stocker les rapports $\Lambda(X_k)$. Pour le stockage des quantit\'es $\lambda_k^i(m)$, $\alpha_k^i(m)$, $\beta_k(m)$ et $\gamma_i(R_k, m', m)$, la m\'emoire requise est elle en $\mathcal{O}(2^KNt)$,
-d'o\`u un impact total en $\mathcal{O}(2^KNt)$.
+On a besoin de cr\'eer de multiples tableaux pour la programmation dynamique pour stocker l'ensemble des valeurs $(x_k)_{k \in [\![1, N]\!]}$, $(y_{1,k})_{k \in [\![1, N]\!]}$, $(y_{2,k})_{k \in [\![1, N]\!]}$, $\Lambda(X_k)$, $\lambda_k^i(m)$, $\alpha_k^i(m)$, $\beta_k(m)$ et $\gamma_i(R_k, m', m)$. La taille de la m\'emoire n\'ecessaire pour stocker le signal est \'egale \`a $\mathcal{O}(N)$, de m\^eme pour stocker les rapports $\Lambda(X_k)$. Pour le stockage des quantit\'es $\lambda_k^i(m)$, $\alpha_k^i(m)$, $\beta_k(m)$ et $\gamma_i(R_k, m', m)$, la m\'emoire requise est elle en $\mathcal{O}(2^KN)$,
+d'o\`u un impact total en $\mathcal{O}(2^KN)$.
 
 
 \subsection{D\'ecodage avec des codes LDPC}
-Le code consid\'er\'e est un code (n, j, k),
+\subsubsection{Complexit\'e temporelle}
+Le code consid\'er\'e est un code (n, j, k), chaque multiplication $H.c^T$ est en $\mathcal{O}((k+1)\frac{nj}{k})=\mathcal{O}(nj)$, le calcul du nombre de contr\^oles non satisfaits est \'egalement en $\mathcal{O}(nj)$, une majoration grossi\`ere du nombre de bits \`a changer est la taille du message re\c{c}u en entier i.e. un $\mathcal{O}(\frac{n(j+k)}{k})$, ainsi, chaque it\'eration du d\'ecodage a un co\`ut de $\mathcal{O}(nj)$, le d\'ecodage total du message se fait alors en $\mathcal{O}(k_{max}nj)$, ce qui est plus long que pour le d\'ecodage des turbocodes car on a besoin d'avoir $k_max > i_max$
+
+
+\subsubsection{Complexit\'e spatiale}
+La structure de la matrice de d\'ecodage assure une taille utilis\'ee en $\mathcal{O}(nj)$, pour stocker le message re\c{c}u on utilise un $\mathcal{O}(\frac{n(j+k)}{k})$, les tableaux auxilliaires pour compter le nombre d'erreurs ont une taille en $\mathcal{O}(\frac{nj}{k})$, la m\'emoire utilis\'ee est donc un $\mathcal{O}(nj)$, ce qui est comparable au co\^ut de d\'ecodage d'un turbocode.
+
+
+\section{Conclusion}
+Dans la pratique, j'ai constat\'e non seulement une meilleure r\'esistance au bruit de la part des turbocodes, mais \'egalement un temps de d\'ecodage du message beaucoup plus faible que pour des codes LDPC, les turbocodes sont ici bien plus avantageux. Cependant, les diff\'erences de r\'esistance au bruit peuvent s'expliquer par le type de d\'ecodage choisi pour les codes LDPC, en effet, le d\'ecodage brut choisi pour l'impl\'ementation est n\'ecessairement moins performant car il supprime une grande partie de l'information re\c{c}ue, un d\'ecodage s'appuyant sur des calculs probabilistes permettrait sans doute d'am\'eliorer l'efficacit\'e de ce type de codes.
+
 
 \appendix
 
+
+
 \section{Sch\'emas et images}
-\begin{figure}[h!]
+\begin{figure}[H]
 	\centering
 	\begin{tikzpicture}[auto, thick, node distance=2.5cm, >=triangle 45]
 	\draw % Drawing the diagram of a communication system :
@@ -208,7 +216,7 @@ Le code consid\'er\'e est un code (n, j, k),
 	\label{fig:shannon}
 \end{figure}
 
-\begin{figure}[h!]
+\begin{figure}[H]
 	\centering
 	\begin{tikzpicture}[auto, thick, >=triangle 45]
 	\draw % Drawing the turbo encoder
@@ -236,7 +244,7 @@ Le code consid\'er\'e est un code (n, j, k),
 	\label{fig:turbo}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[H]
 	\centering
 	\begin{tikzpicture}[auto, thick, node distance = 1.5cm, >=triangle 45, scale=0.95, transform shape]
 	\draw % Drawing the RSC component
@@ -264,6 +272,7 @@ Le code consid\'er\'e est un code (n, j, k),
 	\draw[->] (m2) -- (m3);
 	\draw[->] (m3) -- (m4);
 	\draw[->] (m4) |- (s5);
+	\draw[->] (m3) -- (s5);
 	\draw[->] (mid) |- (s2);
 	\draw[->] (m1) -- (s2);
 	\draw[->] (s2) -- (s3);
@@ -277,21 +286,21 @@ Le code consid\'er\'e est un code (n, j, k),
 	\label{fig:enc}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[H]
 	\begin{minipage}{\textwidth}
 		\begin{minipage}{.3\textwidth}
 			\centering
-			\includegraphics[scale=0.4]{turbo_noisy_60}\\
+			\includegraphics[scale=0.5]{turbo_noisy_60}\\
 			Avant d\'ecodage
 		\end{minipage}
 		\begin{minipage}{.3\textwidth}
 			\centering
-			\includegraphics[scale=0.4]{turbo_decoded_60}\\
+			\includegraphics[scale=0.5]{turbo_decoded_60}\\
 			Apr\`es d\'ecodage avec turbocodes
 		\end{minipage}
 		\begin{minipage}{.3\textwidth}
 			\centering
-			\includegraphics[scale=0.4]{ldpc_basic_decoded_60}\\
+			\includegraphics[scale=0.5]{ldpc_basic_decoded_60}\\
 			Apr\`es d\'ecodage avec codes LDPC
 		\end{minipage}
 	\end{minipage}
@@ -299,21 +308,21 @@ Le code consid\'er\'e est un code (n, j, k),
 	\label{fig:faible}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[H]
 	\begin{minipage}{\textwidth}
 		\begin{minipage}{.3\textwidth}
 			\centering
-			\includegraphics[scale=0.4]{turbo_noisy_80}\\
+			\includegraphics[scale=0.5]{turbo_noisy_80}\\
 			Avant d\'ecodage
 		\end{minipage}
 		\begin{minipage}{.3\textwidth}
 			\centering
-			\includegraphics[scale=0.4]{turbo_decoded_80}\\
+			\includegraphics[scale=0.5]{turbo_decoded_80}\\
 			Apr\`es d\'ecodage avec turbocodes
 		\end{minipage}
 		\begin{minipage}{.3\textwidth}
 			\centering
-			\includegraphics[scale=0.4]{ldpc_basic_decoded_80}\\
+			\includegraphics[scale=0.5]{ldpc_basic_decoded_80}\\
 			Apr\`es d\'ecodage avec codes LDPC
 		\end{minipage}
 	\end{minipage}
@@ -321,14 +330,50 @@ Le code consid\'er\'e est un code (n, j, k),
 	\label{fig:eleve}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[H]
 	\centering
-	\includegraphics[scale=0.6]{taux_erreur}
+	\includegraphics[scale=0.8]{taux_erreur}
 	\caption{Taux d'erreur en fonction du SNR}
 	\label{fig:taux}
 \end{figure}
 
 
+\section{Calculs pour les turbocodes}
+\subsection*{Calcul de $\lambda_k^i(m)$}
+\begin{subequations}
+\label{eq:1}
+On a:
+\begin{flalign*}
+	\lambda_k^i(m)=\frac{\mathbf{P}(X_k=i,S_k=m,R_1^k,R_{k+1}^N)}{\mathbf{P}(R_1^k,R_{k+1}^N)}=\frac{\mathbf{P}(X_k=i,S_k=m,R_1^k)}{\mathbf{P}(R_1^k)}\frac{\mathbf{P}(R_{k+1}^N|X_k=i,S_k=m,R_1^k)}{\mathbf{P}(R_{k+1}^N|R_1^k)}
+\end{flalign*}
+Or, puisque $R_{k+1}^N$ n'est pas influenc\'e par $X_k$ ou $R_1^k$, on a :\\
+\begin{flalign*}
+	\mathbf{P}(R_{k+1}^N|X_k=i,S_k=m,R_1^k)=\mathbf{P}(R_{k+1}^N|S_k=m)
+\end{flalign*}
+d'o\`u\\
+\begin{flalign*}
+	\lambda_k^i(m)=\alpha_k^i(m)\beta_k(m)
+\end{flalign*}
+\end{subequations}
 
+
+\subsection*{Calcul de $\alpha_k^i(m)$}
+\begin{subequations}
+\label{eq:2}
+On introduit : $\gamma_i(R_k, m', m) = \mathbf{P}(X_k = i, R_k, S_k = m/ S_{k-1} = m')$,\\
+\begin{flalign*}
+\alpha_k^i(m)=\frac{\mathbf{P}(d_k=i,S_k=m,R_1^{k-1},R_k)}{\mathbf{P}(R_1^{k-1},R_k)}=\frac{\mathbf{P}(d_k=i,S_k=m,R_k|R_1^{k-1})}{\mathbf{P}(R_k|R_1^{k-1})}
+\end{flalign*}
+Or,\\
+\begin{flalign*}
+&\mathbf{P}(d_k=i,S_k=m,R_k|R_1^{k-1})=\sum\limits_{m'}\sum\limits_{j=0}^1\mathbf{P}(d_k=i,S_k=m,d_{k-1}=j,S_{k-1}=m',R_k|R_1^{k-1})\\
+&=\sum\limits_{m'}\sum\limits_{j=0}^1\mathbf{P}(d_{k-1}=j,S_{k-1}=m'|R_1^{k-1})\times\mathbf{P}(d_k=i,S_k=m,R_k|d_{k-1}=j,S_{k-1}=m',R_1^{k-1})\\
+&=\sum\limits_{m'}\sum\limits_{j=0}^1\alpha_{k-1}^j(m')\gamma_i(R_k, m', m)
+\end{flalign*}
+Ainsi,
+\begin{flalign*}
+\mathbf{P}(R_k|R_1^{k-1})=\sum\limits_{m'}\sum\limits_{m}\sum\limits_{i=0}^1\sum\limits_{j=0}^1\alpha_{k-1}^j(m')\gamma_i(R_k, m', m)
+\end{flalign*}
+\end{subequations}
 
 \end{document}
