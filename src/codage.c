@@ -50,9 +50,16 @@ int main(int argc, char *argv[])
     }
     if (demos & 8)
     {
-        demo_turbo_graph(20, s);
+        demo_turbo_graph(100, s);
     }
-
+    if (demos & 16)
+    {
+        demo_ldpc_graph(100, s);
+    }
+    if (demos & 32)
+    {
+        demo_base_graph(100, s);
+    }
 
     return 0;
 }

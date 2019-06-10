@@ -21,7 +21,10 @@
 \usepackage{ragged2e}
 \usepackage{graphicx}
 \usepackage{tikz}
+
 \usepackage{amsmath}
+\usepackage{amsmath}
+\usepackage{amssymb}
 
 \graphicspath{{./Images/}}
 
@@ -81,7 +84,7 @@
 	keywordstyle=\color{cblue}\bfseries,
 	numberstyle=\tiny\color{cblue},
 	stringstyle=\color{cred},
-	basicstyle=\ttfamily\scriptsize,
+	basicstyle=\ttfamily\tiny,
 	breakatwhitespace=false,         
 	breaklines=true,                 
 	captionpos=b,                    
@@ -101,7 +104,6 @@
 \addbibresource{Bibliography.bib}
 
 
-\begin{document}
 % Definition of blocks:
 \tikzset{%
 	block/.style    	= {draw, thick, rectangle, minimum height = 3em, minimum width = 3em},
@@ -113,10 +115,10 @@
 }
 
 %Defining string as labels of certain blocks.
-\newcommand{\suma}{\Large$+$}
-\newcommand{\inte}{$\displaystyle \int$}
-\newcommand{\derv}{\huge$\frac{d}{dt}$}
 \newcommand{\inpt}{$\boldsymbol{\circ}$}
+
+
+\begin{document}
 
 
 \begin{frame}[plain]
@@ -164,7 +166,7 @@
 		\draw[->](source) -- node [below] {\scriptsize Message}(emetteur);
 		\draw[->](emetteur) -- node [below] {\scriptsize Signal} (canal);
 		\draw[->](canal) -- node [below] {\scriptsize Signal} (recepteur);
-		\draw node at (5.3, -0.6) {\scriptsize re\c{ç}u};
+		\draw node at (5.3, -0.6) {\scriptsize re\c{c}u};
 		\draw[->](recepteur) -- node [below] {\scriptsize Message} (destination);
 		\draw[->] (bruit) -- (canal);
 	\end{tikzpicture}
@@ -208,10 +210,15 @@
 
 \begin{frame}{Plusieurs classes de codes}
 	\begin{itemize}
-		\item Codes Reed-Solomon
-		\item Codage par convolution
 		\item Turbocodes
 		\item Codes LDPC (Low Density Parity Checks)
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Plusieurs types de d\'ecodage}
+	\begin{itemize}
+		\item D\'ecodage dur (Hard Decoding)
+		\item D\'ecodage \`a d\'ecision douce (Soft decoding)
 	\end{itemize}
 \end{frame}
 
@@ -242,6 +249,14 @@
 	\end{tikzpicture}
 \end{frame}
 
+\begin{frame}{D\'ecodage d'un message cod\'e \`a l'aide de turbocodes}
+Soit $R_1^N$ le message re\c{c}u, $S_k$ l'\'etat de codeur apr\`es lecture du bit $X_k$\\
+$\forall k \in \{1, N\}$ on calcule $\Lambda(x_k)$ \`a l'aide de $\alpha_k^i(m) = \dfrac{\mathbf{P}(X_k = i, S_k = m, R_1^k)}{\mathbf{P}(R_1^k)}.\mathbf{P}(X_k = i, S_k = m / R_1^k)$ et\\
+$\beta_k(m) = \dfrac{\mathbf{P}(R_{k+1}^N / S_k = m)}{\mathbf{P}(R_{k+1}^N / R_1^k)}$\\
+on obtient alors $\mathbf{P}(x_k = 1 | R_1^N)$ et $\mathbf{P}(x_k = 0 | R_1^N)$ d'o\`u $\Lambda(x_k)$\\
+car $\mathbf{P}(x_k = i | R_1^N) = \sum\limits_m\alpha_k^i(m).\beta_k(m)$
+\end{frame}
+
 \begin{frame}{Codes LDPC}
 	\begin{itemize}
 		\item Sommes de contrôle
@@ -250,23 +265,17 @@
 	\end{itemize}
 \end{frame}
 
-\begin{frame}{Plusieurs types de d\'ecodage}
+\begin{frame}{D\'ecodage d'un message cod\'e \`a l'aide d'un code LDPC}
 	\begin{itemize}
-		\item D\'ecodage dur (Hard Decoding)
-		\item D\'ecodage \`a d\'ecision douce (Soft decoding)
+		\item Traduction du message re\c{c}u \`a l'aide d'une fonction seuil
+		\item Calcul des sommes au niveau des noeuds de contr\^ole
+		\item Modification des noueds messagers reli\'es aux noeuds de contrôles non satisfaits
+		\item It\'eration jus'\`a satisfaction des noeuds de contr\^ole o\`u it\'eration maximale atteinte
 	\end{itemize}
 \end{frame}
 
 
 \section{Impl\'ementation des codes correcteurs}
-\subsection{Choix des codes}
-
-
-\begin{frame}{Codes utilis\'es}
-	Les standards du CCSDS (Consultative Committee for Space Data Systems) pr\'econisent l'utilisation des Turbocodes et codes LDPC.
-\end{frame}
-
-
 \subsection{Repr\'esenter l'efficacit\'e des codes}
 
 
@@ -280,13 +289,10 @@
 \begin{frame}{Processus}
 	\begin{itemize}
 		\item Transformation de l'image en liste de bits
-		\item Codage du message obtenu et transformation
-		\begin{itemize}
-			\item[] $0 \to -1.0$
-			\item[] $1 \to 1.0$ 
-		\end{itemize}
+		\item Codage du message obtenu
 		\item Rajout d'un bruit blanc de moyenne nulle et de variance $s^2$
 		\begin{itemize}
+			\item[] $x_k = (2.d_k - 1) + a_k$ o\`u $a_k \hookrightarrow \mathcal{N}(0, s)$
 			\item[] $\frac{E_b}{N_0} = \frac{1}{s}$
 		\end{itemize}
 		\item Enregistrement du message bruit\'e
@@ -300,35 +306,24 @@
 \subsection{Bruit faible}
 
 
-\begin{frame}{Turbocodes, $10.\log(\frac{E_b}{N_0}) = 2.2$ dB}
+\begin{frame}{$SNR_{dB} = 2.2$ dB}
 	\begin{columns}
-		\begin{column}{.5\textwidth}
+		\begin{column}{.3\textwidth}
 			\begin{figure}
-				\includegraphics[scale=0.6]{turbo_noisy_60}\\
+				\includegraphics[scale=0.4]{turbo_noisy_60}\\
 				Avant d\'ecodage
 			\end{figure}
 		\end{column}
-		\begin{column}{.5\textwidth}
+		\begin{column}{.3\textwidth}
 			\begin{figure}
-				\includegraphics[scale=0.6]{turbo_decoded_60}\\
-				Apr\`es d\'ecodage
+				\includegraphics[scale=0.4]{turbo_decoded_60}\\
+				Apr\`es d\'ecodage avec turbocodes
 			\end{figure}
 		\end{column}
-	\end{columns}
-\end{frame}
-
-\begin{frame}{Codes LDPC, $10.\log(\frac{E_b}{N_0}) = 2.2$ dB}
-	\begin{columns}
-		\begin{column}{.5\textwidth}
+		\begin{column}{.3\textwidth}
 			\begin{figure}
-				\includegraphics[scale=0.6]{ldpc_basic_noisy_60}\\
-				Avant d\'ecodage
-			\end{figure}
-		\end{column}
-		\begin{column}{.5\textwidth}
-			\begin{figure}
-				\includegraphics[scale=0.6]{ldpc_basic_decoded_60}\\
-				Apr\`es d\'ecodage
+				\includegraphics[scale=0.4]{ldpc_basic_decoded_60}\\
+				Apr\`es d\'ecodage avec codes LDPC
 			\end{figure}
 		\end{column}
 	\end{columns}
@@ -338,55 +333,36 @@
 \subsection{Bruit \'elev\'e}
 
 
-\begin{frame}{Turbocodes, $10.\log(\frac{E_b}{N_0}) = 0.97$ dB}
+\begin{frame}{$SNR_{dB} = 0.97$ dB}
 	\begin{columns}
-		\begin{column}{.5\textwidth}
+		\begin{column}{.3\textwidth}
 			\begin{figure}
-				\includegraphics[scale=0.6]{turbo_noisy_80}\\
+				\includegraphics[scale=0.4]{turbo_noisy_80}\\
 				Avant d\'ecodage
 			\end{figure}
 		\end{column}
-		\begin{column}{.5\textwidth}
+		\begin{column}{.3\textwidth}
 			\begin{figure}
-				\includegraphics[scale=0.6]{turbo_decoded_80}\\
-				Apr\`es d\'ecodage
+				\includegraphics[scale=0.4]{turbo_decoded_80}\\
+				Apr\`es d\'ecodage avec turbocodes
+			\end{figure}
+		\end{column}
+		\begin{column}{.3\textwidth}
+			\begin{figure}
+				\includegraphics[scale=0.4]{ldpc_basic_decoded_80}\\
+				Apr\`es d\'ecodage avec codes LDPC
 			\end{figure}
 		\end{column}
 	\end{columns}
 \end{frame}
 
-\begin{frame}{Turbocodes, $10.\log(\frac{E_b}{N_0}) = 0.13$ dB}
-	\begin{columns}
-		\begin{column}{.5\textwidth}
-			\begin{figure}
-				\includegraphics[scale=0.6]{turbo_noisy_97}\\
-				Avant d\'ecodage
-			\end{figure}
-		\end{column}
-		\begin{column}{.5\textwidth}
-			\begin{figure}
-				\includegraphics[scale=0.6]{turbo_decoded_97}\\
-				Apr\`es d\'ecodage
-			\end{figure}
-		\end{column}
-	\end{columns}
-\end{frame}
 
-\begin{frame}{Codes LDPC, $10.\log(\frac{E_b}{N_0}) = 0.97$ dB}
-	\begin{columns}
-		\begin{column}{.5\textwidth}
-			\begin{figure}
-				\includegraphics[scale=0.6]{ldpc_basic_noisy_80}\\
-				Avant d\'ecodage
-			\end{figure}
-		\end{column}
-		\begin{column}{.5\textwidth}
-			\begin{figure}
-				\includegraphics[scale=0.6]{ldpc_basic_decoded_80}\\
-				Apr\`es d\'ecodage
-			\end{figure}
-		\end{column}
-	\end{columns}
+\subsection{Taux d'erreur}
+
+
+\begin{frame}{Taux d'erreur des deux codes}
+	\centering
+	\includegraphics[scale=0.6]{taux_erreur}
 \end{frame}
 
 
@@ -416,108 +392,106 @@
 \section{Code Informatique}
 
 
-\begin{frame}[plain,fragile]{Transformation des images}
-	\begin{lstlisting}[language=Python]
-def image_to_bytes(file_name):
-	cwd = os.getcwd()
-	file_path = os.path.join(cwd, '..', 'files', 'images', file_name) + '.png'
-	image = Image.open(file_path)
-	
-	data = list(image.getdata(band=0))  # The image is in grayscale
-	
-	byte_path = os.path.join(cwd, '..', 'files', 'bytes', file_name) + '.bt'
-	try:
-	byte_file = open(byte_path, 'xb')
-	except FileExistsError:
-	byte_file = open(byte_path, 'wb')
-	
-	for x in data:
-	byte_file.write(x.to_bytes(1, 'big'))
-	
-	byte_file.close()
-	\end{lstlisting}
-\end{frame}
-
-\begin{frame}[plain,fragile]
-	\begin{lstlisting}[language=Python]
-def bytes_to_image(file_name, size):
-	cwd = os.getcwd()
-	byte_path = os.path.join(cwd, '..', 'files', 'bytes', file_name) + '.bt'
-	byte_file = open(byte_path, 'rb')
-	
-	image = Image.frombytes('L', size, byte_file.read(), "raw")
-	file_path = os.path.join(cwd, '..', 'files', 'images', file_name) + '.png'
-	try:
-	file = open(file_path, 'xb')
-	except FileExistsError:
-	file = open(file_path, 'wb')
-	
-	image.save(file)
-	file.close()
-	image.close()	
-	\end{lstlisting}
-\end{frame}
-
-\begin{frame}[plain, fragile]{Rajout de bruit}
+\begin{frame}[plain, fragile]{Initialisation}
 	\begin{lstlisting}[language=C]
-s_list * add_noise(h_list *mes, double s)
-{
-	s_list *res = csl(mes->n, mes->n);
-	for (size_t i = 0; i < res->n; i++)
-	{
-		res->list[i] = (2 * mes->list[i]) - 1 + 
-								box_muller(0, s);
-	}
-	return res;
-}
+    size_t n = X->n;
+    s_list *alpha = csl(32*(n + 1), 32*(n + 1));
+    s_list *beta = csl(16*(n + 1), 16*(n + 1));
+    s_list *gamma = csl(32*(n + 1), 32*(n + 1));
+    s_list *lambda = csl(32*(n + 1), 32*(n + 1));
+    s_list *a = csl(n + 1, n + 1);
+    double tmp[2];
+
+    size_t d; // The value of the k-th bit
+    size_t b; // The value of the k-th encoded bit
+    size_t m; // The previous state of the register
+    size_t i;
+    double x;
+    double y;
+
+    alpha->list[0] = 1.0;
+    alpha->list[1] = 1.0;
+    a->list[0] = 1.0;
+    a->list[n] = 1.0;
+    beta->list[16*n] = 1.0;
+
+    lambda->list[32 * n] = alpha->list[32 * n];
+    lambda->list[1 + 32 * n] = alpha->list[1 + 32 * n];
 	\end{lstlisting}
 \end{frame}
 
-\begin{frame}[plain, fragile]
+\begin{frame}[plain, fragile]{Calcul des $\alpha$ et $\gamma$}
 	\begin{lstlisting}[language=C]
-//(c) Copyright 1994, Everett F. Carter Jr.
-double box_muller(double m, double s)
-{
-	double x1, x2, w, y1;
-	static double y2;
-	static int use_last = 0;
-	if (use_last)
-	{
-		y1 = y2;
-		use_last = 0;
-	}
-	else
-	{
-		do {
-			x1 = 2.0 * (rand() / (double) RAND_MAX) - 1.0;
-			x2 = 2.0 * (rand() / (double) RAND_MAX) - 1.0;
-			w = x1 * x1 + x2 * x2;
-		} while ( w >= 1.0 );
-		w = sqrt( (-2.0 * log( w ) ) / w );
-		y1 = x1 * w;
-		y2 = x2 * w;
-		use_last = 1;
-	}
-	
-	return( m + y1 * s );
-}
+	for(size_t k = 1; k <= n; k++) // k-th bit of the message
+    {
+        x = X->list[k - 1];
+        y = Y->list[k - 1];
+
+        for(size_t S = 0; S < 16; S++) // Register state of the encoder
+        {
+            d = 0;
+            m = S/2 + (S & 8) ^ 8*((S & 1) ^ d);
+            b = d ^ (m & 1) ^ (m & 4)/4 ^ (m & 8)/8;
+            gamma->list[2*S + 32*k] = pTrans(x, d, s) * pTrans(y, b, s);
+            i = 2*m + 32*(k-1);
+            alpha->list[2*S + 32*k] = gamma->list[2*S + 32*k] *
+                                        (alpha->list[i] + alpha->list[1 + i]);
+
+            d = 1;
+            m = S/2 + (S & 8) ^ 8*((S & 1) ^ d);
+            b = d ^ (m & 1) ^ (m & 4)/4 ^ (m & 8)/8;
+            gamma->list[1 + 2*S + 32*k] = pTrans(x, d, s) * pTrans(y, b, s);
+            i = 2*m + 32*(k-1);
+            alpha->list[1 + 2*S + 32*k] = gamma->list[1 + 2*S + 32*k] *
+                                        (alpha->list[i] + alpha->list[1 + i]);
+            a->list[k] += alpha->list[2*S + 32*k] + alpha->list[1 + 2*S + 32*k];
+        }
+
+        for(size_t S = 0; S < 16; S++)
+        {
+            alpha->list[2*S + 32*k] /=  a->list[k];
+            alpha->list[1 + 2*S + 32*k] /= a->list[k];
+        }
+    }
 	\end{lstlisting}
 \end{frame}
 
-\begin{frame}[plain, fragile]{D\'ecodage basique}
+\begin{frame}[plain, fragile]{Calcul des $\beta$ et $\lambda$}
 	\begin{lstlisting}[language=C]
-h_list * decode_h_basic(s_list *mes)
-{
-	h_list *res = chl(mes->n, mes->n);
-	for (size_t i = 0; i < mes->n; i++)
-	{
-		res->list[i] = (mes->list[i] > 0);
-	}
-	return res;
-}
+    for(int k = (n - 1); k > 0; k--)    // Compute the probabilities beta
+    {
+        for(size_t S = 0; S < 16; S++)
+        {
+            m = (2*S & 15) + ((S & 8)/8) ^ ((S & 4)/4);
+            beta->list[S + 16*k] = beta->list[m + 16*(k + 1)] *
+                                                gamma->list[2*m + 32*(k + 1)];
+
+            m = (2*S & 15) + ((S & 8)/8) ^ (1 - (S & 4)/4);
+            i = 2*m + 32*(k + 1);
+            beta->list[S + 16*k] += beta->list[i / 2] * gamma->list[1 + i];
+        }
+
+        for(size_t S = 0; S < 16; S++)
+        {
+            beta->list[S + 16*k] /= a->list[k + 1];
+            lambda->list[2*S + 32*k] = alpha->list[2*S + 32*k] *
+                                                        beta->list[S + 16*k];
+            lambda->list[1 + 2*S + 32*k] = alpha->list[1 + 2*S + 32*k] *
+                                                        beta->list[S + 16*k];
+        }
+
+        tmp[0] = 0.0;
+        tmp[1] = 0.0;
+
+        for(size_t S = 0; S < 16; S++)
+        {
+            tmp[0] += lambda->list[2*S + 32*k];
+            tmp[1] += lambda->list[1 + 2*S + 32*k];
+        }
+
+        llr->list[k - 1] = log(tmp[1] / tmp[0]);
 	\end{lstlisting}
 \end{frame}
-
 
 \begin{frame}[plain, fragile]{Cr\'eation d'un code LDPC}
 	\begin{lstlisting}[language=C]
@@ -547,6 +521,46 @@ h_matrix * create_base(size_t n, size_t j, size_t k)
 	\end{lstlisting}
 \end{frame}
 
+\begin{frame}[plain, fragile]{D\'ecodage d'un code LDPC}
+	\begin{lstlisting}[language=C]
+int decode_ldpc_a_basic(a_matrix *mat, h_list *mes, size_t nb_max)
+{
+    h_list *verif = product_a(mat, mes);
+    i_list *count = cil(mes->n, mes->n);
+    i_list *max_errors = cil(mes->n, mes->n);
+    size_t iter = 0;
+    char correct = is_all_nil(verif);
+    while (!correct && (iter < nb_max))
+    {
+        set_all_i_list(count, 0);
+        for (size_t i = 0; i < verif->n; i++)
+        {
+            if (verif->list[i])
+            {
+                for (size_t j = 0; j < mat->list_n[i]->n; j++)
+                {
+                    count->list[mat->list_n[i]->list[j]] ++;
+                }}}
+        // Flip the bits with the most errors
+        max_i_list(count, max_errors);
+        for (size_t i = 0; i < max_errors->n; i++)
+        {
+            mes->list[max_errors->list[i]] ^= 1;
+        }
+        iter ++;
+        product_a_in_place(mat, mes, verif);
+        correct = is_all_nil(verif);
+    }
+    // Free used lists
+    free_h_list(verif);
+    free_i_list(count);
+    free_i_list(max_errors);
+    return iter;
+}
+	\end{lstlisting}
+\end{frame}
+
+
 \section{Turbocodes}
 
 
@@ -560,10 +574,10 @@ h_matrix * create_base(size_t n, size_t j, size_t k)
 		node at (-0.425, 3) [input] (stream) {\inpt}
 		node at (0, 3) [input] (mid) {}
 		node [sum, right of=stream] (s1) {$+$}
-		node [smallblock, right of=s1] (m1) {D}
-		node [smallblock, right of=m1] (m2) {D}
-		node [smallblock, right of=m2] (m3) {D}
-		node [smallblock, right of=m3] (m4) {D}
+		node [smallblock, right of=s1] (m1) {$M_1$}
+		node [smallblock, right of=m1] (m2) {$M_2$}
+		node [smallblock, right of=m2] (m3) {$M_3$}
+		node [smallblock, right of=m3] (m4) {$M_4$}
 		node [sum, below of=m1] (s2) {$+$}
 		node [sum, below of=m3] (s3) {$+$}
 		node [sum, below of=m4] (s4) {$+$}
@@ -579,6 +593,7 @@ h_matrix * create_base(size_t n, size_t j, size_t k)
 		\draw[->] (m2) -- (m3);
 		\draw[->] (m3) -- (m4);
 		\draw[->] (m4) |- (s5);
+		\draw[->] (m3) -- (s5);
 		\draw[->] (mid) |- (s2);
 		\draw[->] (m1) -- (s2);
 		\draw[->] (s2) -- (s3);
@@ -588,12 +603,21 @@ h_matrix * create_base(size_t n, size_t j, size_t k)
 		\draw[->] (s5) -| (s1);
 		\draw[->] (s4) -- (out);
 	\end{tikzpicture}
+\vfill
+	\begin{tabular}{|l|c|c|c|c|c|c|c|c|c|c|}
+		\hline
+		$d_k$ & $\emptyset$ & 1 & 1 & 0 & 1 & 1 & 0 & 1 & 0 & 1\\
+		\hline
+		$S$ & 0 & 1 & 3 & 6 & 12 & 9 & 3 & 7 & 15 & 15\\
+		\hline
+		$Y_k$ & $\emptyset$ & 1 & 0 & 1 & 0 & 1 & 0 & 0 & 0 & 0\\
+		\hline
+	\end{tabular}
 \end{frame}
 
+
 \subsection{D\'ecodage}
-\begin{frame}{Sch\'ema d'un d\'ecodeur}
-	Sch\'ema
-\end{frame}
+
 
 \begin{frame}{Processus de d\'ecodage}
 	Le d\'ecodeur re\c{c}oit en entr\'ee trois variables r\'eelles pour le code avec $R = \frac{1}{3}$ :
@@ -622,7 +646,39 @@ h_matrix * create_base(size_t n, size_t j, size_t k)
 		\item $\beta_k(m) = \dfrac{\mathbf{P}(R_{k+1}^N / S_k = m)}{\mathbf{P}(R_{k+1}^N / R_1^k)}$
 		\item $\gamma_i(R_k, m', m) = \mathbf{P}(X_k = i, R_k, S_k = m/ S_{k-1} = m')$
 	\end{itemize}
-	On a par le calcul : $\lambda_k^i(m) = \alpha_k^i(m).\beta_k(m)$
+	On a de plus :\\
+	$\lambda_k^i(m)=\frac{\mathbf{P}(X_k=i,S_k=m,R_1^k,R_{k+1}^N)}{\mathbf{P}(R_1^k,R_{k+1}^N)}$\\
+	$=\frac{\mathbf{P}(X_k=i,S_k=m,R_1^k)}{\mathbf{P}(R_1^k)}.\frac{\mathbf{P}(R_{k+1}^N|X_k=i,S_k=m,R_1^k)}{\mathbf{P}(R_{k+1}^N|R_1^k)}$\\
+	Ainsi, par ind\'ependance du message, $\mathbf{P}(R_{k+1}^N|X_k=i,S_k=m,R_1^k)=\mathbf{P}(R_{k+1}^N|S_k=m)$, d'o\`u $\lambda_k^i(m) = \alpha_k^i(m).\beta_k(m)$
+\end{frame}
+
+\begin{frame}
+	\begin{align*}
+		\alpha_k^i(m)=&\frac{\mathbf{P}(d_k=i,S_k=m,R_1^{k-1},R_k)}{\mathbf{P}(R_1^{k-1},R_k)}\\
+		=&\frac{\mathbf{P}(d_k=i,S_k=m,R_k|R_1^{k-1})}{\mathbf{P}(R_k|R_1^{k-1})}
+	\end{align*}
+\end{frame}
+
+\begin{frame}
+	$\mathbf{P}(d_k=i,S_k=m,R_k|R_1^{k-1})=$\\
+	$\sum\limits_{m'}\sum\limits_{j=0}^1\mathbf{P}(d_k=i,S_k=m,d_{k-1}=j,S_{k-1}=m',R_k|R_1^{k-1})$\\
+	$=\sum\limits_{m'}\sum\limits_{j=0}^1\mathbf{P}(d_{k-1}=j,S_{k-1}=m'|R_1^{k-1})\times$\\
+	$\qquad\mathbf{P}(d_k=i,S_k=m,R_k|d_{k-1}=j,S_{k-1}=m',R_1^{k-1})$\\
+	$=\sum\limits_{m'}\sum\limits_{j=0}^1\alpha_{k-1}^j(m')\gamma_i(R_k, m', m)$\\
+	De m\^eme, on a :\\
+	$\mathbf{P}(R_k|R_1^{k-1})=\sum\limits_{m'}\sum\limits_{m}\sum\limits_{i=0}^1\sum\limits_{j=0}^1\alpha_{k-1}^j(m')\gamma_i(R_k, m', m)$, d'o\`u\\
+	$\alpha_k^i(m)=\frac{\sum\limits_{m'}\sum\limits_{j=0}^1\alpha_{k-1}^j(m')\gamma_i(R_k,m',m)}{\sum\limits_{m'}\sum\limits_{m}\sum\limits_{i=0}^1\sum\limits_{j=0}^1\alpha_{k-1}^j(m')\gamma_i(R_k, m', m)}$
+\end{frame}
+
+\begin{frame}
+	$\beta_k(m)=\frac{\sum\limits_{m'}\sum\limits_{i=0}^1\mathbf{P}(d_{k+1}=i,S_{k+1}=m',R_{k+1},R_{k+2}^N|S_k=m)}{\mathbf{P}(R_{k+1}^N|R_1^k)}$\\
+	$=\frac{\sum\limits_{m'}\sum\limits_{i=0}^1\mathbf{P}(R_{k+2}^N|S_{k+1}=m')\mathbf{P}(d_{k+1}=i,S_{k+1}=m',R_{k+1},|S_k=m)}{\mathbf{P}(R_{k+1}^N|R_1^k)}$\\
+	$=\frac{\sum\limits_{m'}\sum\limits_{i=0}^1\beta_{k+1}(m')\gamma_i(R_{k+1},m,m')}{\mathbf{P}(R_{k+1}|R_1^k)}$\\
+	$=\frac{\sum\limits_{m'}\sum\limits_{i=0}^1\beta_{k+1}(m')\gamma_i(R_{k+1},m,m')}{\sum\limits_{m'}\sum\limits_{m}\sum\limits_{i=0}^1\sum\limits_{j=0}^1\alpha_{k}^j(m')\gamma_i(R_{k+1}, m', m)}$
+\end{frame}
+
+\begin{frame}
+	
 \end{frame}
 
 \begin{frame}{Algorithme de calcul}
@@ -630,7 +686,7 @@ h_matrix * create_base(size_t n, size_t j, size_t k)
 		\item[-] \'Etape 0 : On initialise les probabilit\'es, \\
 					$\qquad \alpha_0^i(0) = 1, \; \alpha_0^i(m) = 0 \quad \forall m \neq 0$\\
 					$\qquad \beta_N(0) = 1, \; \beta_N(m) = 0 \quad \forall m \neq 0$
-		\item[-] \'Etape 1 : Pour chaque inforation re\c{c}ue $R_k$, on calcule $\alpha_k^i(m)$, $\gamma_i(R_k, m', m)$
+		\item[-] \'Etape 1 : Pour chaque information re\c{c}ue $R_k$, on calcule $\alpha_k^i(m)$, $\gamma_i(R_k, m', m)$
 		\item[-] \'Etape 2 : Apr\`es la r\'eception du message, on calcule  $\beta_k(m)$ puis  $\lambda_k^i(m)$ et enfin $\Lambda(X_k)$
 	\end{itemize}
 \end{frame}
@@ -729,15 +785,6 @@ h_matrix * create_base(size_t n, size_t j, size_t k)
 		\draw[-] (c3.north) -- (m5);
 		\draw[-] (c3.north) -- (5.3, 1.8);
 	\end{tikzpicture}
-\end{frame}
-
-\begin{frame}{Plusieurs m\'ethodes}{D\'ecodage brut}
-	\begin{itemize}
-		\item Traduction du message re\c{c}u \`a l'aide d'une fonction seuil
-		\item Calcul des sommes au niveau des noeuds de contr\^ole
-		\item Modification des noueds messagers reli\'es aux noeuds de contrôles non satisfaits
-		\item It\'eration jus'\`a satisfaction des noeuds de contr\^ole o\`u it\'eration maximale atteinte
-	\end{itemize}
 \end{frame}
 
 \end{document}

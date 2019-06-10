@@ -396,8 +396,6 @@ int demo_ldpc_proba(char *file_name, double s, size_t i_max)
 
 int demo_turbo_graph(size_t nb_iter, double p)
 {
-    char debug = 0;
-
     char path[1024];
 
     getcwd(path, 1024);
@@ -405,17 +403,19 @@ int demo_turbo_graph(size_t nb_iter, double p)
 
     FILE *fp = fopen(path, "w");
 
-    double noise[12] = {2, 1, 0.9, 0.8, 0.7, 0.6, 0.5,
-                                0.4, 0.3, 0.2, 0.1, 0.05};
+    double noise[] = {2, 1, 0.9, 0.8, 0.7, 0.6, 0.5,
+                                0.4, 0.3, 0.2, 0.1, 0.05, 0.02, 0.01};
     double s;
     size_t nb_err;
+
+    double ber;
 
     h_list *mes = chl(8920, 8920);
     random_h(mes, p);
 
     h_list *enc = encode_turbo(mes);
 
-    for (size_t i = 0; i < 12; i++)
+    for (size_t i = 0; i < 14; i++)
     {
         nb_err = 0;
         s = pow(10, -0.1*noise[i]);
@@ -433,12 +433,119 @@ int demo_turbo_graph(size_t nb_iter, double p)
         }
         printf("%f -- %d / %d\n", s, nb_err, 8920*nb_iter);
 
-
-
+        ber = ((double) nb_err) / (8920.0 * nb_iter);
+        fprintf(fp, "%f %f\n", noise[i], ber);
     }
 
 
     fclose(fp);
 
     free_h_list(mes);
+}
+
+
+int demo_ldpc_graph(size_t nb_iter, double p)
+{
+    char path[1024];
+
+    getcwd(path, 1024);
+    strcat(path, "/../files/graph/ldpc.grp");
+
+    FILE *fp = fopen(path, "w");
+
+    double noise[] = {5, 4, 3, 2, 1, 0.9, 0.8, 0.7, 0.6, 0.5,
+                                0.4, 0.3, 0.2, 0.1};
+    double s;
+    size_t nb_err;
+
+    double ber;
+
+    h_list *mes = chl(8920, 8920);
+    random_h(mes, p);
+
+    h_matrix *base = create_base(8920, 40, 20);
+    a_matrix *gen = cgm_a(base);
+    a_matrix *dec = cdm_a(base);
+
+    h_list *enc = encode_ldpc_a(gen, mes);
+
+    for (size_t i = 0; i < 14; i++)
+    {
+        nb_err = 0;
+        s = pow(10, -0.1*noise[i]);
+
+        for (size_t k = 0; k < nb_iter; k++)
+        {
+            s_list *sig = add_noise(enc, s);
+            h_list *sig_h = decode_h_basic(sig);
+            decode_ldpc_a_basic(dec, sig_h, 100);
+            sig_h->n = 8920;
+
+            nb_err += nb_errors(sig_h, mes);
+
+            free_s_list(sig);
+            free_h_list(sig_h);
+        }
+        printf("%f -- %d / %d\n", s, nb_err, 8920*nb_iter);
+
+        ber = ((double) nb_err) / (8920.0 * nb_iter);
+        fprintf(fp, "%f %f\n", noise[i], ber);
+    }
+
+
+    fclose(fp);
+
+    free_h_list(mes);
+    free_h_matrix(base);
+    free_a_matrix(gen);
+    free_a_matrix(dec);
+
+}
+
+
+int demo_base_graph(size_t nb_iter, double p)
+{
+    char path[1024];
+
+    getcwd(path, 1024);
+    strcat(path, "/../files/graph/base.grp");
+
+    FILE *fp = fopen(path, "w");
+
+    double noise[] = {5, 4, 3, 2, 1, 0.9, 0.8, 0.7, 0.6, 0.5,
+                                0.4, 0.3, 0.2, 0.1, 0.05, 0.02, 0.01};
+    double s;
+    size_t nb_err;
+
+    double ber;
+
+    h_list *mes = chl(8920, 8920);
+    random_h(mes, p);
+
+    for (size_t i = 0; i < 17; i++)
+    {
+        nb_err = 0;
+        s = pow(10, -0.1*noise[i]);
+
+        for (size_t k = 0; k < nb_iter; k++)
+        {
+            s_list *sig = add_noise(mes, s);
+            h_list *res = decode_h_basic(sig);
+
+            nb_err += nb_errors(res, mes);
+
+            free_s_list(sig);
+            free_h_list(res);
+        }
+        printf("%f -- %d / %d\n", s, nb_err, 8920*nb_iter);
+
+        ber = ((double) nb_err) / (8920.0 * nb_iter);
+        fprintf(fp, "%f %f\n", noise[i], ber);
+    }
+
+
+    fclose(fp);
+
+    free_h_list(mes);
+
 }
